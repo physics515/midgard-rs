@@ -2,7 +2,7 @@
 name = "midgard-rs"
 version = "0.0.1"
 edition = "2021"
-categories = ["thorswap", "migard", "thorchain", "api"]
+categories = ["api-bindings", "cryptography::cryptocurrencies"]
 license = "MIT"
 keywords = ["thorswap", "migard", "thorchain", "api"]
 readme = "README.md"
