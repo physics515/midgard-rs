@@ -41,8 +41,6 @@ pub async fn api_get_earnings_history(base_url: &str, interval: Option<Interval>
 		Err(e) => bail!(APIError::ReqwestError(e)),
 	};
 
-	println!("response: {}", response);
-
 	let res: EarningsHistory = match serde_json::from_str(&response) {
 		Ok(res) => res,
 		Err(e) => bail!(APIError::SerdeError(e)),

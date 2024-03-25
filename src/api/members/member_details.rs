@@ -21,9 +21,7 @@ pub async fn api_get_member_details(base_url: &str, address: &str, show_savers: 
 		Ok(response) => response,
 		Err(e) => bail!(APIError::ReqwestError(e)),
 	};
-
-	println!("response: {}", response);
-
+        
 	let res: MemberDetails = match serde_json::from_str(&response) {
 		Ok(res) => res,
 		Err(e) => bail!(APIError::SerdeError(e)),

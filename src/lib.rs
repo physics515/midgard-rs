@@ -12,31 +12,27 @@
 //! ## Basic Usage
 //! 
 //! ```rust
-//! use midgard::Midgard;
-//! 
-//! #[tokio::main]
-//! async fn main() {
-//!     let midgard = Midgard::new();
-//!     let address = "thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g";
-//!     let balance = midgard.get_balance(address, None, None).await.unwrap();
-//!     println!("coins: {:?}", balance.get_coins());
-//! }
+//! use midgard_rs::Midgard;
+//! # tokio_test::block_on(async {
+//! let mut midgard = Midgard::new();
+//! let address = "thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g";
+//! let balance = midgard.get_balance(address, None, None).await.unwrap();
+//! assert!(*balance.get_height() > 0);
+//! # });
 //! ```
 //! 
 //! ## Configuration
 //! 
 //! ```rust
-//! use midgard::Midgard;
-//! use midgard::Configuration;
-//! 
-//! #[tokio::main]
-//! async fn main() {
-//!     let config = Configuration::new("https://midgard.ninerealms.com/v2/".to_string(), 1000); // base_url, rate_limit_ms
-//!     let midgard = Midgard::with_config(config);
-//!     let address = "thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g";
-//!     let balance = midgard.get_balance(address, None, None).await.unwrap(); // address, timestamp, height
-//!     println!("coins: {:?}", balance.get_coins());
-//! }
+//! use midgard_rs::Midgard;
+//! use midgard_rs::Configuration;
+//! # tokio_test::block_on(async {
+//! let config = Configuration::new("https://midgard.ninerealms.com/v2/".to_string(), 1000); // base_url, rate_limit_ms
+//! let mut midgard = Midgard::with_config(config);
+//! let address = "thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g";
+//! let balance = midgard.get_balance(address, None, None).await.unwrap(); // address, timestamp, height
+//! assert!(*balance.get_height() > 0);
+//! # });
 //! ```
 //! 
 

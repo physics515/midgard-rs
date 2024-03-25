@@ -22,5 +22,5 @@ serde-aux = "4"
 chrono = { version="0", features=["serde"] }
 serde_with = { version="3", features=["chrono"] }
 rust_decimal = { version="1", features=["serde", "serde-str"] }
-rust_decimal_macros = "1"
+#rust_decimal_macros = "1"
 tokio-test = "0"

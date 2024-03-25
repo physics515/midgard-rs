@@ -112,8 +112,6 @@ pub async fn api_get_action_list(base_url: &str, parameters: GetActionList) -> R
 		Err(e) => bail!(APIError::ReqwestError(e)),
 	};
 
-	println!("response: {}", response);
-
 	let res: ActionList = match serde_json::from_str(&response) {
 		Ok(res) => res,
 		Err(e) => bail!(APIError::SerdeError(e)),
