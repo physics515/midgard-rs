@@ -2,10 +2,10 @@
 #![allow(clippy::multiple_crate_versions)]
 
 //! # Midgard
-//! Consumer information relating to swaps, pools, and volume. Midgard returns time-series information regarding the THORChain network, such as volume, pool information, users, liquidity providers and more. It also proxies to THORNode to reduce burden on the network. Runs on every node.
+//! Consumer information relating to swaps, pools, and volume. Midgard returns time-series information regarding the `THORChain` network, such as volume, pool information, users, liquidity providers and more. It also proxies to `THORNode` to reduce burden on the network. Runs on every node.
 //! 
 //! ## midgard-rs
-//! This crate aims to provide fully typed client for the Midgard API. 
+//! This crate aims to provide fully typed client for the `THORChain` Midgard API. 
 //! * By default it references the `https://midgard.thorswap.net/v2/` base url but this can be changed by creating a new `Configuration` object and passing it to the `Midgard::with_config()` method.
 //! * The client is rate limited to 1 request per second by default but this can be changed by creating a new `Configuration` object and passing it to the `Midgard::with_config()` method.
 //! 
