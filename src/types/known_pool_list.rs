@@ -31,8 +31,16 @@ impl KnownPoolList {
 		self.0.insert(pool, status);
 	}
 
+        #[must_use] pub const fn get(&self) -> &HashMap<String, PoolStatus> {
+                &self.0
+        }
+
+        #[must_use] pub fn get_pools(&self) -> Vec<String> {
+                self.0.keys().cloned().collect()
+        }
+
 	#[must_use]
-	pub fn get(&self, pool: &str) -> Option<&PoolStatus> {
+	pub fn get_status(&self, pool: &str) -> Option<&PoolStatus> {
 		self.0.get(pool)
 	}
 
