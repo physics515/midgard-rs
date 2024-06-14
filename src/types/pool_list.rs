@@ -49,17 +49,12 @@ impl PoolList {
 	}
 
 	#[must_use]
-	pub fn get_savers_assets(&self) -> Vec<String> {
-		let mut assets = HashSet::new();
-		let pools = self.get_pools().iter().filter(|x| {
+	pub fn get_savers_pools(&self) -> Vec<Pool> {
+		self.get_pools().iter().filter(|x| {
 			let savers_depth = x.get_savers_depth();
 			*savers_depth != Decimal::ZERO
-		});
-
-		for pool in pools {
-			assets.insert(pool.get_asset().to_string());
-		}
-		assets.into_iter().collect()
+		}).cloned().collect()
+                
 	}
 
 	#[must_use]

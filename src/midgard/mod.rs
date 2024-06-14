@@ -96,6 +96,13 @@ mod tests {
 
 			assert!(!next_actions.get_actions().get_actions().is_empty());
 		}
+
+                // savers pools
+                let pool_list = midgard.get_pool_list(None, None).await.unwrap();
+                let savers_pools = pool_list.get_savers_pools();
+                assert!(!savers_pools.is_empty());
+
+                println!("savers pools: {}", json!(savers_pools));
         }
 
 }
