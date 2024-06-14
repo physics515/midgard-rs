@@ -59,3 +59,43 @@ impl Midgard {
 		self.set_last_call(Utc::now());
 	}
 }
+
+
+#[cfg(test)]
+mod tests {
+        use rand::prelude::*;
+	use serde_json::json;
+        use crate::GetActionList;
+
+	use super::*;
+
+        #[tokio::test]
+        async fn endpoints() {
+                let mut midgard = Midgard::new();
+
+
+                // actions
+                let params = GetActionList::new(vec!["BTC.BTC".to_string()], 10);
+		let actions = midgard.get_actions(params).await.unwrap();
+                assert!(!actions.get_actions().get_actions().is_empty());
+
+                
+                // action pagination
+                let pool_list = midgard.get_pool_list(None, None).await.unwrap();
+		let random_usize = thread_rng().gen_range(0..pool_list.get_assets().len());
+		let pool = pool_list.get_assets()[random_usize].clone();
+
+		let mut params = GetActionList::new(vec![pool.clone()], 5);
+		let actions = midgard.get_actions(params.clone()).await.unwrap();
+		assert!(!actions.get_actions().get_actions().is_empty());
+
+		let next_page_token = actions.get_meta().get_next_page_token();
+		if let Some(next_page_token) = next_page_token {
+			params.set_next_page_token(next_page_token);
+			let next_actions = midgard.get_actions(params).await.unwrap();
+
+			assert!(!next_actions.get_actions().get_actions().is_empty());
+		}
+        }
+
+}

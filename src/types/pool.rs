@@ -1,6 +1,5 @@
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use serde_aux::prelude::*;
 
 use crate::PoolStatus;
 
@@ -42,8 +41,8 @@ pub struct Pool {
 
 	asset: String,
 
-	#[serde(rename = "assetDepth", deserialize_with = "deserialize_number_from_string")]
-	asset_depth: u64,
+	#[serde(rename = "assetDepth", with = "deserialize_decimal_with_nan")]
+	asset_depth: Decimal,
 
 	#[serde(rename = "assetPrice", with = "deserialize_decimal_with_nan")]
 	asset_price: Decimal,
@@ -51,55 +50,55 @@ pub struct Pool {
 	#[serde(rename = "assetPriceUSD", with = "deserialize_decimal_with_nan")]
 	asset_price_usd: Decimal,
 
-	#[serde(deserialize_with = "deserialize_number_from_string")]
-	earnings: u64,
+	#[serde(with = "deserialize_decimal_with_nan")]
+	earnings: Decimal,
 
 	#[serde(rename = "earningsAnnualAsPercentOfDepth", with = "deserialize_decimal_with_nan")]
 	earnings_annual_as_percent_of_depth: Decimal,
 
-	#[serde(rename = "liquidityUnits", deserialize_with = "deserialize_number_from_string")]
-	liquidity_units: u64,
+	#[serde(rename = "liquidityUnits", with = "deserialize_decimal_with_nan")]
+	liquidity_units: Decimal,
 
 	#[serde(rename = "lpLuvi", with = "deserialize_decimal_with_nan")]
 	lp_luvi: Decimal,
 
-	#[serde(rename = "nativeDecimal", deserialize_with = "deserialize_number_from_string")]
-	native_decimal: i64,
+	#[serde(rename = "nativeDecimal", with = "deserialize_decimal_with_nan")]
+	native_decimal: Decimal,
 
 	#[serde(rename = "poolAPY", with = "deserialize_decimal_with_nan")]
 	pool_apy: Decimal,
 
-	#[serde(rename = "runeDepth", deserialize_with = "deserialize_number_from_string")]
-	rune_depth: u64,
+	#[serde(rename = "runeDepth", with = "deserialize_decimal_with_nan")]
+	rune_depth: Decimal,
 
 	#[serde(rename = "saversAPR", with = "deserialize_decimal_with_nan")]
 	savers_apr: Decimal,
 
-	#[serde(rename = "saversDepth", deserialize_with = "deserialize_number_from_string")]
-	savers_depth: u64,
+	#[serde(rename = "saversDepth", with = "deserialize_decimal_with_nan")]
+	savers_depth: Decimal,
 
-	#[serde(rename = "saversUnits", deserialize_with = "deserialize_number_from_string")]
-	savers_units: u64,
+	#[serde(rename = "saversUnits", with = "deserialize_decimal_with_nan")]
+	savers_units: Decimal,
 
 	status: PoolStatus,
 
-	#[serde(rename = "synthSupply", deserialize_with = "deserialize_number_from_string")]
-	synth_supply: u64,
+	#[serde(rename = "synthSupply", with = "deserialize_decimal_with_nan")]
+	synth_supply: Decimal,
 
-	#[serde(rename = "synthUnits", deserialize_with = "deserialize_number_from_string")]
-	synth_units: u64,
+	#[serde(rename = "synthUnits", with = "deserialize_decimal_with_nan")]
+	synth_units: Decimal,
 
-	#[serde(rename = "totalCollateral", deserialize_with = "deserialize_number_from_string")]
-	total_collateral: u64,
+	#[serde(rename = "totalCollateral", with = "deserialize_decimal_with_nan")]
+	total_collateral: Decimal,
 
-	#[serde(rename = "totalDebtTor", deserialize_with = "deserialize_number_from_string")]
-	total_debt_tor: u64,
+	#[serde(rename = "totalDebtTor", with = "deserialize_decimal_with_nan")]
+	total_debt_tor: Decimal,
 
-	#[serde(deserialize_with = "deserialize_number_from_string")]
-	units: u64,
+	#[serde(with = "deserialize_decimal_with_nan")]
+	units: Decimal,
 
-	#[serde(rename = "volume24h", deserialize_with = "deserialize_number_from_string")]
-	volume_24h: u64,
+	#[serde(rename = "volume24h", with = "deserialize_decimal_with_nan")]
+	volume_24h: Decimal,
 }
 
 mod deserialize_decimal_with_nan {
@@ -133,7 +132,7 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_asset_depth(&self) -> &u64 {
+	pub const fn get_asset_depth(&self) -> &Decimal {
 		&self.asset_depth
 	}
 
@@ -148,7 +147,7 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_earnings(&self) -> &u64 {
+	pub const fn get_earnings(&self) -> &Decimal {
 		&self.earnings
 	}
 
@@ -158,7 +157,7 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_liquidity_units(&self) -> &u64 {
+	pub const fn get_liquidity_units(&self) -> &Decimal {
 		&self.liquidity_units
 	}
 
@@ -168,7 +167,7 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_native_decimal(&self) -> &i64 {
+	pub const fn get_native_decimal(&self) -> &Decimal {
 		&self.native_decimal
 	}
 
@@ -178,7 +177,7 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_rune_depth(&self) -> &u64 {
+	pub const fn get_rune_depth(&self) -> &Decimal {
 		&self.rune_depth
 	}
 
@@ -188,12 +187,12 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_savers_depth(&self) -> &u64 {
+	pub const fn get_savers_depth(&self) -> &Decimal {
 		&self.savers_depth
 	}
 
 	#[must_use]
-	pub const fn get_savers_units(&self) -> &u64 {
+	pub const fn get_savers_units(&self) -> &Decimal {
 		&self.savers_units
 	}
 
@@ -203,32 +202,32 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_synth_supply(&self) -> &u64 {
+	pub const fn get_synth_supply(&self) -> &Decimal {
 		&self.synth_supply
 	}
 
 	#[must_use]
-	pub const fn get_synth_units(&self) -> &u64 {
+	pub const fn get_synth_units(&self) -> &Decimal {
 		&self.synth_units
 	}
 
 	#[must_use]
-	pub const fn get_total_collateral(&self) -> &u64 {
+	pub const fn get_total_collateral(&self) -> &Decimal {
 		&self.total_collateral
 	}
 
 	#[must_use]
-	pub const fn get_total_debt_tor(&self) -> &u64 {
+	pub const fn get_total_debt_tor(&self) -> &Decimal {
 		&self.total_debt_tor
 	}
 
 	#[must_use]
-	pub const fn get_units(&self) -> &u64 {
+	pub const fn get_units(&self) -> &Decimal {
 		&self.units
 	}
 
 	#[must_use]
-	pub const fn get_volume_24h(&self) -> &u64 {
+	pub const fn get_volume_24h(&self) -> &Decimal {
 		&self.volume_24h
 	}
 }

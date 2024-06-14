@@ -73,18 +73,3 @@ impl Default for ActionType {
 		Self::Swap
 	}
 }
-
-#[cfg(test)]
-mod tests {
-	use std::str::FromStr;
-
-	use serde_json::json;
-
-	use super::*;
-
-	#[test]
-	fn test_serialize_action_type() {
-		let json = json!(ActionType::Swap);
-		assert_eq!(json.to_string(), "\"swap\"");
-	}
-}

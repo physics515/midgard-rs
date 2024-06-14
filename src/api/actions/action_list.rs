@@ -24,7 +24,7 @@ use crate::{APIError, ActionList, GetActionList};
 ///  Examples:
 /// * affiliate=thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g -
 /// * affiliate=ts,thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g - Query affiliates that one is `THORName` and other is address
-/// Comma separated list. Affiliate address of the action (swap, refund)
+///     Comma separated list. Affiliate address of the action (swap, refund)
 ///
 /// limit: Option<u64> [0..50]
 /// number of actions returned, default is 50

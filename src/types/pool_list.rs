@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use rust_decimal::Decimal;
 
 use serde::{Deserialize, Serialize};
 
@@ -52,7 +53,7 @@ impl PoolList {
 		let mut assets = HashSet::new();
 		let pools = self.get_pools().iter().filter(|x| {
 			let savers_depth = x.get_savers_depth();
-			*savers_depth != 0
+			*savers_depth != Decimal::ZERO
 		});
 
 		for pool in pools {

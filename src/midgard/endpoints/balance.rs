@@ -32,7 +32,6 @@ impl Midgard {
 
 #[cfg(test)]
 mod tests {
-	use rand::prelude::*;
 	use serde_json::json;
 
 	use super::*;

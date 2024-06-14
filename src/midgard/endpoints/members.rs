@@ -104,7 +104,6 @@ mod tests {
 	use serde_json::json;
 
 	use super::*;
-	use crate::api_get_pool_list;
 
 	#[tokio::test]
 	async fn test_get_member_details() {

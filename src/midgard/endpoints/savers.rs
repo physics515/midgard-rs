@@ -35,11 +35,9 @@ impl Midgard {
 
 #[cfg(test)]
 mod tests {
-        use rand::prelude::*;
         use serde_json::json;
 
         use super::*;
-        use crate::api_get_savers_details;
 
         #[tokio::test]
         async fn test_get_savers_details() {

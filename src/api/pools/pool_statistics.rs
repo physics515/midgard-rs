@@ -33,23 +33,3 @@ pub async fn api_get_statistics_of_pool(base_url: &str, pool: &str, period: Opti
 
 	Ok(res)
 }
-
-/* #[cfg(test)]
-mod tests {
-	use rand::prelude::*;
-	use serde_json::json;
-
-	use super::*;
-	use crate::api_get_pool_list;
-
-	#[tokio::test]
-	async fn test_get_statistics_of_pool() {
-		let pool_list = api_get_pool_list(None, None).await.unwrap();
-		let random_usize = thread_rng().gen_range(0..pool_list.get_assets().len());
-		let pool = pool_list.get_assets()[random_usize].clone();
-
-		let pool_statistics = api_get_statistics_of_pool(&pool, None).await.unwrap();
-		println!("{}", json!(pool_statistics));
-		assert!(!pool_statistics.get_asset().is_empty());
-	}
-} */
