@@ -35,7 +35,13 @@ impl Midgard {
 	/// ```
 	///
 	/// # Errors
-	/// todo
+	///
+	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
+	/// instance could not be made or its body could not be read.
+	///
+	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
+	/// this crate expects — which, because the HTTP status is not yet
+	/// checked, is also what an error page from the instance looks like.
 	pub async fn get_health_info(&mut self) -> Result<HealthInfo> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

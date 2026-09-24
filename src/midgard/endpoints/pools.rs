@@ -19,7 +19,16 @@ impl Midgard {
 	/// ```
 	///
 	/// # Errors
-	/// todo
+	///
+	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
+	/// instance could not be made or its body could not be read.
+	///
+	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
+	/// this crate expects — which, because the HTTP status is not yet
+	/// checked, is also what an error page from the instance looks like.
+	///
+	/// Returns a `serde_urlencoded` error if the query parameters could not
+	/// be encoded.
 	pub async fn get_pool_list(&mut self, status: Option<PoolStatus>, period: Option<TimePeriod>) -> Result<PoolList> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -45,12 +54,21 @@ impl Midgard {
 	///
 	/// // Get details of the pool
 	/// let details = midgard.get_details_of_pool(&pool, None).await.unwrap();
-	/// assert!(!details.get_annual_percentage_rate().is_zero());
+	/// assert_eq!(details.get_asset(), pool);
 	/// # });
 	/// ```
 	///
 	/// # Errors
-	/// todo
+	///
+	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
+	/// instance could not be made or its body could not be read.
+	///
+	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
+	/// this crate expects — which, because the HTTP status is not yet
+	/// checked, is also what an error page from the instance looks like.
+	///
+	/// Returns a `serde_urlencoded` error if the query parameters could not
+	/// be encoded.
 	pub async fn get_details_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<Pool> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -73,7 +91,13 @@ impl Midgard {
 	/// ```
 	///
 	/// # Errors
-	/// todo
+	///
+	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
+	/// instance could not be made or its body could not be read.
+	///
+	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
+	/// this crate expects — which, because the HTTP status is not yet
+	/// checked, is also what an error page from the instance looks like.
 	pub async fn get_known_pool_list(&mut self) -> Result<KnownPoolList> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -104,7 +128,16 @@ impl Midgard {
 	/// ```
 	///
 	/// # Errors
-	/// todo
+	///
+	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
+	/// instance could not be made or its body could not be read.
+	///
+	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
+	/// this crate expects — which, because the HTTP status is not yet
+	/// checked, is also what an error page from the instance looks like.
+	///
+	/// Returns a `serde_urlencoded` error if the query parameters could not
+	/// be encoded.
 	pub async fn get_statistics_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<PoolStatistics> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -187,7 +220,10 @@ mod tests {
 
 		let details = midgard.get_details_of_pool(&pool, None).await.unwrap();
 		println!("{}", json!(details));
-		assert!(!details.get_annual_percentage_rate().is_zero());
+		// Assert on the pool's identity, not its APR: a pool with no recent
+		// earnings legitimately reports an APR of 0 (9 of the 43 live pools did
+		// on 2026-09-24), which made this randomly-chosen-pool test flaky.
+		assert_eq!(details.get_asset(), pool);
 	}
 
 	#[tokio::test]
