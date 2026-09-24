@@ -69,11 +69,13 @@ jobs:
       - name: Install stable
         run: rustup toolchain install stable --profile minimal
       - uses: Swatinem/rust-cache@v2
-      # Everything under midgard::endpoints:: and midgard::tests:: calls the
-      # live Midgard API; everything under types:: is pure (de)serialization.
-      # This job must stay green regardless of whether any public instance is
-      # reachable, so it runs only the latter.
-      - run: "cargo test --locked --lib -- --skip midgard::endpoints:: --skip midgard::tests::"
+      # Network tests live in exactly three places: under midgard::endpoints::,
+      # under midgard::tests::, and in any module named live_tests. Everything
+      # else is pure (de)serialization. This job must stay green regardless of
+      # whether any public instance is reachable, so it runs only the latter.
+      # Keep this in step with the convention: a new network test belongs in a
+      # live_tests module.
+      - run: "cargo test --locked --lib -- --skip midgard::endpoints:: --skip midgard::tests:: --skip live_tests"
 
   # ---------------------------------------------------------------------------
   # Informational. These reach out to a public Midgard instance, so a red result

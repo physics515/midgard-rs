@@ -19,6 +19,7 @@ mod churn;
 mod global_stats;
 mod health;
 mod history;
+mod http;
 mod members;
 mod network;
 mod nodes;
