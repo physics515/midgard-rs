@@ -10,6 +10,13 @@ pub enum APIError {
 	#[error("Invalid Parameter: {0}")]
 	InvalidParameter(String),
 
+	/// The shared HTTP client could not be constructed.
+	///
+	/// Effectively unreachable in normal use — it means `reqwest` could not
+	/// initialise its TLS backend — but a library should not panic on it.
+	#[error("Failed to build the HTTP client: {0}")]
+	ClientBuild(String),
+
 	/// The Midgard instance answered, but with a non-success HTTP status.
 	///
 	/// Before this variant existed the body of such a response was handed
