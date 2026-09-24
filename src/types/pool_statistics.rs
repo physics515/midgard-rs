@@ -110,8 +110,11 @@ pub struct PoolStatistics {
 	#[serde(rename = "synthSupply", deserialize_with = "deserialize_number_from_string")]
 	synth_supply: u64,
 
+	/// Signed: Midgard returns large negative synth unit counts on pools
+	/// whose synths have been burnt below the recorded baseline. Four of
+	/// the six pools sampled on 2026-09-24 reported a negative value here.
 	#[serde(rename = "synthUnits", deserialize_with = "deserialize_number_from_string")]
-	synth_units: u64,
+	synth_units: i64,
 
 	#[serde(rename = "toAssetAverageSlip", with = "rust_decimal::serde::str_option")]
 	to_asset_average_slip: Option<Decimal>,
@@ -146,8 +149,9 @@ pub struct PoolStatistics {
 	#[serde(rename = "uniqueSwapperCount", deserialize_with = "deserialize_number_from_string")]
 	unique_swapper_count: u64,
 
+	/// Signed, for the same reason as [`Self::synth_units`].
 	#[serde(deserialize_with = "deserialize_number_from_string")]
-	units: u64,
+	units: i64,
 
 	#[serde(rename = "withdrawAssetVolume", deserialize_with = "deserialize_number_from_string")]
 	withdraw_asset_volume: u64,
@@ -265,7 +269,7 @@ impl PoolStatistics {
 	}
 
 	#[must_use]
-	pub const fn get_synth_units(&self) -> &u64 {
+	pub const fn get_synth_units(&self) -> &i64 {
 		&self.synth_units
 	}
 
@@ -325,7 +329,7 @@ impl PoolStatistics {
 	}
 
 	#[must_use]
-	pub const fn get_units(&self) -> &u64 {
+	pub const fn get_units(&self) -> &i64 {
 		&self.units
 	}
 
@@ -404,5 +408,58 @@ mod tests {
 		println!("pool_statistics: {}", json!(pool_statistics));
 
 		assert_eq!(pool_statistics.get_add_asset_liquidity_volume(), &24590890355026);
+	}
+
+	/// The real `pool/ETH.ETH/stats` payload from 2026-09-24. Its `units` and
+	/// `synthUnits` are both large negative numbers, which used to fail with
+	/// "invalid digit found in string" because the fields were `u64`. Four of
+	/// the six pools sampled that day were affected, so which pool a test
+	/// happened to pick decided whether it passed.
+	#[test]
+	fn test_pool_statistics_with_negative_units() {
+		let json = r#"{
+			"addAssetLiquidityVolume": "0",
+			"addLiquidityCount": "0",
+			"addLiquidityVolume": "0",
+			"addRuneLiquidityVolume": "0",
+			"annualPercentageRate": "",
+			"asset": "ETH.ETH",
+			"assetDepth": "172811567993",
+			"assetPrice": "4236.014527561408",
+			"assetPriceUSD": "2717.864084165026",
+			"averageSlip": "9.554150453955902",
+			"earnings": "417391838316",
+			"earningsAnnualAsPercentOfDepth": "0.01486546606263947",
+			"liquidityUnits": "62585334119444",
+			"poolAPY": "",
+			"runeDepth": "732032312549014",
+			"saversAPR": "",
+			"status": "available",
+			"swapCount": "148032",
+			"swapVolume": "18294237172612120",
+			"synthSupply": "490373992813",
+			"synthUnits": "-212020991491380",
+			"toAssetAverageSlip": "10.019500409853746",
+			"toAssetCount": "46358",
+			"toAssetFees": "6667981479476",
+			"toAssetVolume": "6530606385393197",
+			"toRuneAverageSlip": "9.994177253478524",
+			"toRuneCount": "26448",
+			"toRuneFees": "2811681319891",
+			"toRuneVolume": "1927707340037833",
+			"totalFees": "20691491595596",
+			"uniqueMemberCount": "1483",
+			"uniqueSwapperCount": "0",
+			"units": "-149435657371936",
+			"withdrawAssetVolume": "1068611542122",
+			"withdrawCount": "4",
+			"withdrawRuneVolume": "1153437550345",
+			"withdrawVolume": "2222049092467"
+		}"#;
+		let stats: PoolStatistics = serde_json::from_str(json).unwrap();
+
+		assert_eq!(stats.get_units(), &-149435657371936_i64);
+		assert_eq!(stats.get_synth_units(), &-212020991491380_i64);
+		assert_eq!(stats.get_asset(), "ETH.ETH");
 	}
 }

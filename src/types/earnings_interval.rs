@@ -32,8 +32,11 @@ pub struct EarningsInterval {
 	#[serde(rename = "avgNodeCount", with = "rust_decimal::serde::str")]
 	avg_node_count: Decimal,
 
+	/// Signed: Midgard reports negative block rewards for intervals in
+	/// which emissions ran behind the reserve, and the live
+	/// `history/earnings` response contains them today.
 	#[serde(rename = "blockRewards", deserialize_with = "deserialize_number_from_string")]
-	block_rewards: u64,
+	block_rewards: i64,
 
 	#[serde(rename = "bondingEarnings", deserialize_with = "deserialize_number_from_string")]
 	bonding_earnings: u64,
@@ -68,7 +71,7 @@ impl EarningsInterval {
 	}
 
 	#[must_use]
-	pub const fn get_block_rewards(&self) -> &u64 {
+	pub const fn get_block_rewards(&self) -> &i64 {
 		&self.block_rewards
 	}
 

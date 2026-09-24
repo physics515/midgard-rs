@@ -103,6 +103,7 @@ mod borrowers_list;
 mod borrowers_pool;
 mod borrowers_pools;
 mod churns_list;
+mod decimal_nan;
 mod depth_history;
 mod depth_history_interval;
 mod depth_history_intervals;
