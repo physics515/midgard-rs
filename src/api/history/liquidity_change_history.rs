@@ -35,15 +35,7 @@ pub async fn api_get_liquidity_change_history(base_url: &str, pool: &str, interv
 		}
 	}
 
-	let response = match reqwest::get(&endpoint).await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
-
-	let response = match response.text().await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
+	let response = crate::api::http::get_body(&endpoint).await?;
 
 	let res: LiquidityChangeHistory = match serde_json::from_str(&response) {
 		Ok(res) => res,

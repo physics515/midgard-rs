@@ -8,15 +8,7 @@ use crate::{APIError, HealthInfo};
 #[allow(clippy::module_name_repetitions)]
 pub async fn api_get_health_info(base_url: &str) -> Result<HealthInfo> {
 	let endpoint = base_url.to_string() + "health";
-	let response = match reqwest::get(&endpoint).await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
-
-	let response = match response.text().await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
+	let response = crate::api::http::get_body(&endpoint).await?;
 
 	let res: HealthInfo = match serde_json::from_str(&response) {
 		Ok(res) => res,

@@ -9,15 +9,7 @@ use crate::{APIError, NetworkData};
 #[allow(clippy::module_name_repetitions)]
 pub async fn api_get_network_data(base_url: &str) -> Result<NetworkData> {
 	let endpoint = base_url.to_string() + "network";
-	let response = match reqwest::get(&endpoint).await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
-
-	let response = match response.text().await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
+	let response = crate::api::http::get_body(&endpoint).await?;
 
 	let res: NetworkData = match serde_json::from_str(&response) {
 		Ok(res) => res,

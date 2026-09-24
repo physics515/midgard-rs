@@ -47,9 +47,18 @@ impl Midgard {
 	/// assert!(!member_details.get_pools().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	///
+	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
+	/// instance could not be made or its body could not be read.
+	///
+	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
+	/// this crate expects — which, because the HTTP status is not yet
+	/// checked, is also what an error page from the instance looks like.
+	///
+	/// Returns a `serde_urlencoded` error if the query parameters could not
+	/// be encoded.
 	pub async fn get_member_details(&mut self, address: &[String], show_savers: bool) -> Result<MemberDetails> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -86,9 +95,18 @@ impl Midgard {
 	/// assert!(!member_list.get_members().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	///
+	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
+	/// instance could not be made or its body could not be read.
+	///
+	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
+	/// this crate expects — which, because the HTTP status is not yet
+	/// checked, is also what an error page from the instance looks like.
+	///
+	/// Returns a `serde_urlencoded` error if the query parameters could not
+	/// be encoded.
 	pub async fn get_member_list(&mut self, pool: Option<String>) -> Result<MemberList> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

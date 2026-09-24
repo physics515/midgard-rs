@@ -31,7 +31,7 @@ pub struct GetActionList {
 }
 
 impl GetActionList {
-        #[must_use]
+	#[must_use]
 	pub fn new(asset: Vec<String>, limit: u64) -> Self {
 		Self {
 			address: None,

@@ -9,15 +9,7 @@ use crate::{APIError, NodeList};
 #[allow(clippy::module_name_repetitions)]
 pub async fn api_get_node_list(base_url: &str) -> Result<NodeList> {
 	let endpoint = base_url.to_string() + "nodes";
-	let response = match reqwest::get(&endpoint).await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
-
-	let response = match response.text().await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
+	let response = crate::api::http::get_body(&endpoint).await?;
 
 	let res: NodeList = match serde_json::from_str(&response) {
 		Ok(res) => res,

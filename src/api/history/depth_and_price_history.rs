@@ -31,15 +31,7 @@ pub async fn api_get_depth_and_price_history(base_url: &str, pool: &str, interva
 		}
 	}
 
-	let response = match reqwest::get(&endpoint).await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
-
-	let response = match response.text().await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
+	let response = crate::api::http::get_body(&endpoint).await?;
 
 	let res: DepthHistory = match serde_json::from_str(&response) {
 		Ok(res) => res,

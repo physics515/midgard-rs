@@ -1,6 +1,6 @@
 use std::collections::HashSet;
-use rust_decimal::Decimal;
 
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 use crate::Pool;
@@ -50,11 +50,14 @@ impl PoolList {
 
 	#[must_use]
 	pub fn get_savers_pools(&self) -> Vec<Pool> {
-		self.get_pools().iter().filter(|x| {
-			let savers_depth = x.get_savers_depth();
-			*savers_depth != Decimal::ZERO
-		}).cloned().collect()
-                
+		self.get_pools()
+			.iter()
+			.filter(|x| {
+				let savers_depth = x.get_savers_depth();
+				*savers_depth != Decimal::ZERO
+			})
+			.cloned()
+			.collect()
 	}
 
 	#[must_use]

@@ -21,6 +21,16 @@ pub struct ActionIn {
 
 	#[serde(rename = "txID")]
 	tx_id: String,
+
+	/// The THORChain height at which the transaction occurred. Optional in the
+	/// Midgard v2 spec, and not currently emitted on inbound transactions.
+	#[serde(default, deserialize_with = "crate::types::optional_number::deserialize")]
+	height: Option<u64>,
+
+	/// Whether the transaction is flagged as an affiliate transaction. Declared
+	/// in the spec but not currently emitted by the instances sampled.
+	#[serde(default)]
+	affiliate: Option<bool>,
 }
 
 impl ActionIn {
@@ -37,5 +47,15 @@ impl ActionIn {
 	#[must_use]
 	pub const fn get_tx_id(&self) -> &String {
 		&self.tx_id
+	}
+
+	#[must_use]
+	pub const fn get_height(&self) -> &Option<u64> {
+		&self.height
+	}
+
+	#[must_use]
+	pub const fn get_affiliate(&self) -> &Option<bool> {
+		&self.affiliate
 	}
 }

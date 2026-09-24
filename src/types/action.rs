@@ -153,4 +153,63 @@ mod tests {
 		assert_eq!(action.get_status(), "success");
 		assert_eq!(*action.get_action_type(), ActionType::Withdraw);
 	}
+
+	/// A real `/v2/actions` entry from 2026-09-24 whose outbound transaction has
+	/// no `height`.
+	///
+	/// `height` is optional on the spec's `Transaction` schema — only `txID`,
+	/// `address` and `coins` are required — and it is genuinely absent for any
+	/// outbound that has not landed in a block yet: 31 of the 40 outbounds in a
+	/// plain `/v2/actions?limit=50` had none. Modelling it as a required `u64`
+	/// failed the whole actions response with "missing field `height`", and
+	/// whether a test caught that depended on which pool it randomly picked.
+	/// This entry also carries `type: "contract"`, which the spec does not
+	/// declare but live instances emit.
+	#[test]
+	fn deserialize_action_with_a_heightless_outbound() {
+		let json = r#"
+			{
+				"date": "1790280269856369901",
+				"height": "27969967",
+				"in": [
+					{
+						"address": "thor162faxtq5qmerza08zqcqz4jknh66320au2aydx",
+						"coins": [],
+						"txID": "B9C9145CEB81F8226637D2B472FD558C1E347627A99F87FE3EA7B4C5C27A99A7"
+					}
+				],
+				"metadata": {
+					"contract": {
+						"attributes": {
+							"operation": "execute",
+							"path": "0,1,2"
+						},
+						"contractType": "wasm-calc-strategy/process",
+						"msg": {
+							"execute": [
+								"5160286875827252999"
+							]
+						}
+					}
+				},
+				"out": [
+					{
+						"address": "thor133cq3fauvg9dtd4k7xvt0n8m8k6w26g7qy60uj204cevjaduhgdq7ueml3",
+						"coins": [],
+						"txID": "B9C9145CEB81F8226637D2B472FD558C1E347627A99F87FE3EA7B4C5C27A99A7"
+					}
+				],
+				"pools": [],
+				"status": "success",
+				"type": "contract"
+			}
+		"#;
+		let action: Action = serde_json::from_str(json).unwrap();
+
+		assert_eq!(*action.get_action_type(), ActionType::Contract);
+		assert_eq!(action.get_action_ins().get_action_ins()[0].get_height(), &None);
+		assert_eq!(action.get_action_outs().get_action_outs()[0].get_height(), &None);
+		assert_eq!(action.get_status(), "success");
+		assert_eq!(action.get_height(), &27_969_967_u64);
+	}
 }

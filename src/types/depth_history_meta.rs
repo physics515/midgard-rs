@@ -43,15 +43,19 @@ pub struct DepthHistoryMeta {
 	#[serde(rename = "endRuneDepth", deserialize_with = "deserialize_number_from_string")]
 	end_rune_depth: u64,
 
+	/// Signed: these go negative on pools whose synths have been burnt
+	/// below the recorded baseline.
 	#[serde(rename = "endSynthUnits", deserialize_with = "deserialize_number_from_string")]
-	end_synth_units: u64,
+	end_synth_units: i64,
 
 	#[serde_as(as = "TimestampSeconds<String, Flexible>")]
 	#[serde(rename = "endTime")]
 	end_time: DateTime<Utc>,
 
-	#[serde(rename = "luviIncrease", with = "rust_decimal::serde::str")]
-	luvi_increase: Decimal,
+	/// `None` when Midgard reports `"NaN"`, i.e. LUVI is undefined over the
+	/// requested window.
+	#[serde(rename = "luviIncrease", with = "crate::types::decimal_nan::optional")]
+	luvi_increase: Option<Decimal>,
 
 	#[serde(rename = "priceShiftLoss", with = "rust_decimal::serde::str")]
 	price_shift_loss: Decimal,
@@ -68,8 +72,10 @@ pub struct DepthHistoryMeta {
 	#[serde(rename = "startRuneDepth", deserialize_with = "deserialize_number_from_string")]
 	start_rune_depth: u64,
 
+	/// Signed: these go negative on pools whose synths have been burnt
+	/// below the recorded baseline.
 	#[serde(rename = "startSynthUnits", deserialize_with = "deserialize_number_from_string")]
-	start_synth_units: u64,
+	start_synth_units: i64,
 
 	#[serde_as(as = "TimestampSeconds<String, Flexible>")]
 	#[serde(rename = "startTime")]
@@ -98,7 +104,7 @@ impl DepthHistoryMeta {
 	}
 
 	#[must_use]
-	pub const fn get_end_synth_units(&self) -> &u64 {
+	pub const fn get_end_synth_units(&self) -> &i64 {
 		&self.end_synth_units
 	}
 
@@ -108,7 +114,7 @@ impl DepthHistoryMeta {
 	}
 
 	#[must_use]
-	pub const fn get_luvi_increase(&self) -> &Decimal {
+	pub const fn get_luvi_increase(&self) -> &Option<Decimal> {
 		&self.luvi_increase
 	}
 
@@ -138,7 +144,7 @@ impl DepthHistoryMeta {
 	}
 
 	#[must_use]
-	pub const fn get_start_synth_units(&self) -> &u64 {
+	pub const fn get_start_synth_units(&self) -> &i64 {
 		&self.start_synth_units
 	}
 
@@ -180,7 +186,7 @@ mod tests {
 			end_rune_depth: 3324827631133,
 			end_synth_units: 59635896754,
 			end_time: DateTime::from_timestamp(1710892800, 0).expect("failed to create DateTime"),
-			luvi_increase: Decimal::new(10137411270039827, 16),
+			luvi_increase: Some(Decimal::new(10137411270039827, 16)),
 			price_shift_loss: Decimal::new(9964447262207828, 16),
 			start_asset_depth: 20365684205644,
 			start_lp_units: 972814765176,
@@ -191,5 +197,33 @@ mod tests {
 		};
 		let deserialized: DepthHistoryMeta = serde_json::from_str(json).unwrap();
 		assert_eq!(deserialized, expected);
+	}
+
+	/// The real `meta` block `history/depths/BTC.BTC?interval=day&count=100`
+	/// returned on 2026-09-24. It carries `"NaN"` for `luviIncrease` and
+	/// negative start/end synth unit counts; before those two fields were
+	/// widened this payload failed to deserialize at all.
+	#[test]
+	fn test_deserialize_depth_history_meta_with_nan_and_negative_units() {
+		let json = r#"{
+			"endAssetDepth": "119384894669",
+			"endLPUnits": "232779266143857",
+			"endMemberCount": "2998",
+			"endRuneDepth": "1546268565784675",
+			"endSynthUnits": "-659220551852742",
+			"endTime": "1790294400",
+			"luviIncrease": "NaN",
+			"priceShiftLoss": "0.9999719781546587",
+			"startAssetDepth": "119412894669",
+			"startLPUnits": "233009705453414",
+			"startMemberCount": "2998",
+			"startRuneDepth": "1546984565784675",
+			"startSynthUnits": "-649381483597292",
+			"startTime": "1781654400"
+		}"#;
+		let deserialized: DepthHistoryMeta = serde_json::from_str(json).unwrap();
+		assert_eq!(deserialized.get_luvi_increase(), &None);
+		assert_eq!(deserialized.get_start_synth_units(), &-649_381_483_597_292_i64);
+		assert_eq!(deserialized.get_end_synth_units(), &-659_220_551_852_742_i64);
 	}
 }
