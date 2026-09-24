@@ -42,6 +42,42 @@ async fn main() {
 The default is exported as `midgard_rs::DEFAULT_BASE_URL` if you want to build a
 `Configuration` around it.
 
+## Errors
+
+Every endpoint returns `anyhow::Result`, and the underlying error is an
+`APIError`:
+
+| Variant | Means |
+| --- | --- |
+| `HttpStatus { status, url, body }` | The instance answered with a non-success status. The body is truncated to 512 characters. |
+| `ReqwestError` | The request could not be made, or its body could not be read. |
+| `SerdeError` | The response was not the JSON this crate expects. |
+| `InvalidParameter` | The arguments were rejected before any request was made — `get_balance` with both a timestamp and a height, or a `history/*` call with `count` outside `1..=400`. |
+| `ClientBuild` | The HTTP client could not be constructed. |
+
+`APIError` is `#[non_exhaustive]`.
+
+## TLS
+
+TLS is `rustls` with the bundled `webpki-roots` store; there is no OpenSSL in
+the dependency graph. If you need certificates from your operating system's
+trust store instead, depend on `reqwest` with `rustls-tls-native-roots` in your
+own `Cargo.toml`.
+
+## Testing this crate
+
+Every request goes to a live Midgard instance, so most of the test suite needs
+the network. The two halves are separated by module path: anything under
+`midgard::endpoints::`, `midgard::tests::` or a `live_tests` module calls the
+API, and everything else is pure (de)serialization over checked-in payloads.
+
+```bash
+cargo test --locked --lib -- --skip midgard::endpoints:: --skip midgard::tests:: --skip live_tests
+```
+
+CI runs that offline subset as a required check and the live suite as an
+informational one, so a public instance being down cannot fail a pull request.
+
 > **Note on public instances.** `midgard.ninerealms.com`, which this crate used
 > as its default through 0.0.5, stopped resolving entirely; `midgard.thorswap.net`
 > answers non-browser clients with a Cloudflare challenge instead of JSON. If the

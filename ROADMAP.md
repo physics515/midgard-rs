@@ -8,60 +8,120 @@ Bootstrapped 2026-09-24 from a survey of the repo at `8ae8134`.
 
 ## Phase 0 — Make the crate buildable and releasable again (BLOCKER — nothing else can be verified first)
 
-- [ ] **Restore standalone dependency versions in `Cargo.toml`.** The last commit (`8ae8134`, "merge
+- [x] **Restore standalone dependency versions in `Cargo.toml`.** The last commit (`8ae8134`, "merge
       into workspace", 2025-01-15) rewrote every dependency to `{ workspace = true }`, but this repo
-      has no `[workspace]` table. `cargo metadata` fails with `error inheriting 'anyhow' from
-      workspace root manifest's 'workspace.dependencies.anyhow' / failed to find a workspace root`,
-      so master does not build, test, lint or publish at all. Take the concrete versions from
-      `8a1c966:Cargo.toml` as the starting point and move each to the latest that builds green.
-- [ ] Commit a refreshed `Cargo.lock`; `cargo build --locked` and `cargo test --locked` green.
-- [ ] **Two dependencies are dead weight in the public manifest.** A green `cargo build --locked`
-      reports `warning: unused dependency 'rand'` and `warning: unused dependency 'tokio-test'`
-      (`cargo::unused_dependencies`). `tokio-test` is used only by doc-tests, so it belongs in
-      `[dev-dependencies]`; `rand` looks genuinely unused — confirm and drop it. Both are currently
-      hard runtime dependencies every consumer pays for. While there, check whether `tokio`'s `full`
-      feature can drop to the features the crate actually uses.
-- [ ] `cargo publish --locked --dry-run` green (nothing may be published until it is).
-- [ ] `cargo +nightly fmt --check` is dirty on master today — pre-existing space-indented lines that
-      predate this roadmap (`src/api/members/member_details.rs`, `src/api/savers/savers_details.rs`,
-      `src/lib.rs`, and others) violate the repo's own `hard_tabs = true`. Land the reformat as its
-      OWN commit, separate from any behavior change, so it doesn't bury a real diff — and do it
-      before the CI item turns it into a permanent red check.
-- [ ] Add CI under `.github/workflows/` — build + test + clippy + `cargo +nightly fmt --check` on
-      push and PR. The repo has no CI today, so until this lands a PR has no checks to be green.
+      has no `[workspace]` table, so `cargo metadata` failed outright and master did not build, test,
+      lint or publish at all.
+- [x] Commit a refreshed `Cargo.lock`; `cargo build --locked` and `cargo test --locked` green.
+- [x] Move `tokio-test` into `[dev-dependencies]`, along with `rand`, and drop `tokio`'s `full`
+      feature down to the `time` the library actually uses.
+- [x] `cargo publish --locked --dry-run` green.
+- [x] Add CI under `.github/workflows/` — build (stable + nightly) + clippy + `cargo +nightly fmt
+      --check` + an offline test job, with the live-network tests split into a separate
+      `continue-on-error` job so a public instance being down cannot fail a PR.
 
 ## Phase 1 — Correctness and honesty of the public surface
 
-- [ ] **Docs contradict the code on the default base URL.** `README.md` and the `src/lib.rs` crate
-      docs both say the default is `https://midgard.thorswap.net/v2/`; `Configuration::default()`
-      (`src/midgard/config.rs`) uses `https://midgard.ninerealms.com/v2/`. Decide which is correct,
-      fix the other, and say which way it went in the PR.
-- [ ] **The crate has no offline test suite.** All 48 `#[test]`/`#[tokio::test]` functions and every
-      doc-test call the live Midgard API, so a network outage looks identical to a broken crate. Add
-      serde round-trip tests over captured JSON fixtures (checked into `tests/fixtures/`) so type
-      changes can be verified without the network. Keep the live tests, but mark them so they can be
-      selected separately.
-- [ ] Fill in the `# Errors` doc sections — they are literally `todo` across the endpoint methods
-      (e.g. `src/midgard/endpoints/health.rs`).
-- [ ] Typo in `Cargo.toml` `keywords`: `migard` → `midgard`. Consumer-visible on crates.io.
-- [ ] Public API returns `anyhow::Result` from every endpoint, which gives library consumers nothing
-      to match on. Evaluate a concrete `thiserror` error enum (`thiserror` is already a dependency,
-      and `src/types/errors.rs` exists) — this is a breaking change, so it takes a minor bump.
+- [x] **The default base URL pointed at a host that no longer exists.** `midgard.ninerealms.com` has
+      no A, AAAA or CNAME record as of 2026-09-24, and the `midgard.thorswap.net` the docs advertised
+      answers non-browser clients with a Cloudflare challenge. Now
+      `https://gateway.liquify.com/chain/thorchain_midgard/v2/`, exported as `DEFAULT_BASE_URL`.
+      Source: <https://dev.thorchain.org/concepts/connecting-to-thorchain.html>
+- [x] **The API layer never checked the HTTP status.** A 404 or an error page went straight to
+      `serde_json` and surfaced as a parse error. All 25 call sites now share
+      `src/api/http.rs::get_body`, which checks the status and raises `APIError::HttpStatus`.
+- [x] Fill in the `# Errors` doc sections on all 25 endpoint methods.
+- [x] Typo in `Cargo.toml` `keywords`: `migard` → `midgard`.
+- [x] **`reqwest`'s default features linked OpenSSL.** Switched to `rustls-tls` with
+      `default-features = false`; no `openssl*` or `native-tls` remains in the graph.
+
+- [ ] **Hold one `reqwest::Client` on `Midgard`.** Each request still builds its own client,
+      connection pool and TLS configuration. A process-wide `static` client was tried on
+      2026-09-24 and reverted: a `Client`'s pooled connections are driven by background tasks
+      owned by whichever tokio runtime first used them, so after that runtime is dropped every
+      later request fails with "runtime dropped the dispatch task". The client must therefore be
+      owned by `Midgard`, whose lifetime a consumer controls. Note `Midgard` derives
+      `Serialize`/`Deserialize`, so the field needs `#[serde(skip)]`, and all 25 `api_*` signatures
+      grow a `&Client` parameter. See the write-up in `src/api/http.rs`.
+- [ ] **`ring` is not pure Rust.** Moving to `rustls-tls` removed the dependency on a *system* C
+      library, but `ring` still vendors C and generated assembly. A fully-Rust crypto backend
+      (`rustls` with a RustCrypto provider) is the only way to satisfy the no-FFI principle
+      literally; evaluate whether the maturity is there yet.
+- [ ] **The crate has no fixture-based test suite.** 44 of the 79 lib tests still call the live
+      Midgard API, so a network outage looks like a broken crate. The offline share has gone from
+      0 to 35 by pinning the real payloads that were failing, but the endpoint tests themselves
+      should run against captured JSON in `tests/fixtures/`. The network/offline split is already
+      mechanised — network tests live under `midgard::endpoints::`, `midgard::tests::` or a
+      `live_tests` module, and CI keys off exactly that.
+- [ ] **Re-check the default base URL on every run.** It is a single point of failure outside this
+      project's control and has already broken once. Liquify rate-limits to 50,000 requests/day/IP.
+- [ ] Public API returns `anyhow::Result` from every endpoint, which gives consumers nothing to
+      match on — the concrete `APIError` is erased into it. Return `Result<_, APIError>` instead.
+      `APIError` is now `#[non_exhaustive]`, so adding variants is no longer breaking. Breaking
+      change; takes a minor bump.
+- [ ] `Pool`'s `lpLuvi` uses the older NaN-to-zero coercion in `pool.rs`, which reports a
+      misleading `0` for an undefined LUVI. Align it with the `Option<Decimal>` model now used by
+      `decimal_nan::optional` for `luvi`, `luviIncrease` and `saversYieldShare`.
 
 ## Phase 2 — API coverage vs upstream Midgard v2
 
-- [ ] Audit the implemented endpoints (`src/midgard/endpoints/`: actions, balance, borrowers, churn,
-      global_stats, health, history, members, network, nodes, pools, savers, thorname) against the
-      current Midgard v2 OpenAPI spec, and file each gap as its own `[ ]` item here with a link.
-- [ ] Re-check the typed response structs against the live spec — the crate was last touched in
-      January 2025 and THORChain has shipped since; a silently-changed field is a deserialization
-      failure for consumers.
+Audited 2026-09-24 against the upstream OpenAPI spec (`openapi/openapi.yaml` on the `develop` branch
+of <https://gitlab.com/thorchain/midgard>, spec version **2.35.0**) and against live responses. The
+crate implements 24 of the 38 documented `/v2/*` paths.
+
+- [x] `Pool` was missing `depthMinus2Percent`, `depthPlus2Percent` (Midgard 2.34.0),
+      `liquidityInUSD` (2.34.1) and `saversYieldShare`.
+- [x] `DepthHistoryInterval` was missing the OHLC set added in Midgard 2.33.0.
+- [x] `ActionType` was missing `thorname`, `send`, `runePoolDeposit`, `runePoolWithdraw` (all in the
+      spec) and `trade`, `contract` (emitted live, absent from the spec). An unknown value used to
+      fail the whole `/v2/actions` response and now lands in `ActionType::Other`.
+- [ ] Add `/v2/history/affiliate`, `/v2/history/affiliate/stats` and `/v2/history/affiliate/earnings`
+      — affiliate volume history landed in Midgard 2.33.0 (2025-11-27), affiliate earnings in 2.34.0
+      (2025-12-15). Source: <https://gitlab.com/thorchain/midgard/-/releases>
+- [ ] Add `/v2/holders` — the Holders API landed in Midgard 2.32.8 (2025-08-28).
+- [ ] Add `/v2/history/runepool` and `/v2/runepool/{address}`.
+- [ ] Add `/v2/history/reserve` and `/v2/history/rune`.
+- [ ] Add `/v2/bonds/{address}` and `/v2/votes`.
+- [ ] Add `/v2/metrics/scores`, `/v2/metrics/data` and `/v2/metrics/anomalies`.
+- [ ] Add `/v2/tcy/distribution/{address}`.
+- [ ] `ActionMetadata` has fields only for `swap`, `addLiquidity`, `withdraw` and `refund`. Live
+      `/v2/actions` also returns a `contract` metadata block, and the new action types will bring
+      their own. Nothing fails — the struct does not use `deny_unknown_fields` — but the data is
+      silently dropped.
+- [ ] `genesisInfo` is no longer returned by `/v2/health`. `HealthInfo::genesis_info` is `Option` so
+      it still parses, but `get_health_info`'s doc comment documents it as a live field.
+- [ ] Sweep the remaining response types for `u64` fields that upstream can report as negative, the
+      way `units`/`synthUnits`/`blockRewards` were. `savers`, `swaps`, `tvl`, `members`,
+      `borrowers`, `nodes`, `network` and `stats` were checked against live data on 2026-09-24 and
+      are clean, but the check should be a fixture test, not a one-off.
 
 ## Phase 3 — Ergonomics and modernization
 
 - [ ] Every endpoint takes `&mut self` purely to update the rate-limit timestamp, so a `Midgard`
       cannot be shared across tasks without a lock. Evaluate interior mutability for the limiter.
+      Pairs naturally with holding a `Client` on `Midgard`.
 - [ ] `edition = "2021"` → `2024`.
-- [ ] Declare an MSRV (`rust-version`) and check it in CI.
-- [ ] Add `documentation = "https://docs.rs/midgard-rs"` and a `homepage` to `Cargo.toml`; crates.io
-      currently shows neither.
+- [ ] Declare an MSRV (`rust-version`) and check it in CI. The crate builds on stable 1.98.0 today.
+- [x] Add `documentation = "https://docs.rs/midgard-rs"` to `Cargo.toml`. (A `homepage` was tried
+      and dropped — cargo warns that it is redundant with `repository` when they are the same URL.)
+- [ ] Dependencies a major version or more behind, checked against crates.io on 2026-09-24:
+      `thiserror` 1 → **2.0.21**, `reqwest` 0.12 → **0.13.5**, `rand` 0.8 → **0.10.3** (`thread_rng`
+      and `gen_range` were renamed in 0.9, which touches the test modules). `serde_with` (3.23.0),
+      `rust_decimal` (1.43.0), `serde-aux` and `chrono` are all current within their major.
+
+## Routine hygiene
+
+- [ ] **The single-instance PID lock does not hold in this sandbox.** The routine writes the PID of
+      a detached `sleep` to `scratch/midgard-routine/routine.lock`, but detached background
+      processes are reaped almost immediately here, so the lock reads as stale within seconds. On
+      2026-09-24 a second session took it over and ran `cargo clippy` in this same working tree
+      mid-run. Anchor the lock to the owning `claude` session PID, or to a heartbeat timestamp.
+- [ ] **Builds on this host are I/O-bound, not CPU-bound.** `~/.cargo/config.toml` (created
+      2026-09-24 by another routine) points every repo under `/mnt/deepmem/Development` at one
+      shared `Cargo Target` directory, so six concurrent nightly builds serialise on a single
+      `.cargo-build-lock`; on top of that, rustc stalls in `balance_dirty_pages` waiting on btrfs
+      writeback. A cold build took 23m30s that way and under 15s with `CARGO_TARGET_DIR` on the
+      `/tmp` tmpfs. Decide deliberately whether the shared target dir is worth it.
+- [ ] That same `~/.cargo/config.toml` sets `rustflags = ["-Z", "threads=8"]` globally, which is
+      nightly-only: any `cargo +stable` invocation needs `RUSTFLAGS=` to override it, or it fails.
+      Since this crate must build on stable, that is a trap worth removing or scoping.

@@ -35,6 +35,22 @@
 //! # });
 //! ```
 //!
+//! ## Errors
+//!
+//! Every endpoint returns `anyhow::Result`, and the underlying error is an
+//! [`APIError`]: [`APIError::HttpStatus`] when the instance answered with a
+//! non-success status, [`APIError::ReqwestError`] when the request could not be
+//! made or read, [`APIError::SerdeError`] when the body was not the JSON this
+//! crate expects, [`APIError::InvalidParameter`] when the arguments were
+//! rejected before any request was made, and [`APIError::ClientBuild`] when the
+//! HTTP client could not be constructed. The enum is `#[non_exhaustive]`.
+//!
+//! ## TLS
+//!
+//! TLS is `rustls` with the bundled `webpki-roots` store; there is no OpenSSL
+//! in the dependency graph. If you need your operating system's trust store
+//! instead, depend on `reqwest` with `rustls-tls-native-roots` yourself.
+//!
 //! ## A note on public instances
 //!
 //! `midgard.ninerealms.com`, which this crate used as its default through
