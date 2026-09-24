@@ -90,6 +90,21 @@ crate implements 24 of the 38 documented `/v2/*` paths.
       silently dropped.
 - [ ] `genesisInfo` is no longer returned by `/v2/health`. `HealthInfo::genesis_info` is `Option` so
       it still parses, but `get_health_info`'s doc comment documents it as a live field.
+- [x] `ActionOut::height` was a required `u64`, but `height` is optional on the spec's `Transaction`
+      schema and genuinely absent for any outbound that has not landed in a block — 31 of the 40
+      outbounds in a plain `/v2/actions?limit=50`. It failed the whole actions response. Now
+      `Option<u64>`, on `ActionIn` too, along with the spec's optional `affiliate` flag.
+- [ ] **`get_member_details` intermittently fails with `Serde Error: invalid digit found in
+      string`.** Caught by CI on 2026-09-24 (`test (live network)`, run 36052198128) and seen once
+      more locally; not reproducible on demand, because the test picks a random pool and then random
+      members of it. About 40 member payloads were scanned by hand across a dozen pools without
+      finding the offending value — no negative numbers and no non-integer strings in any field
+      `MemberPool` parses as `u64`. Needs the failing payload captured rather than guessed at: make
+      the endpoint tests log the raw body on a parse failure, or wait for the fixture suite below.
+- [ ] **The randomised endpoint tests are flaky by construction.** Several pick a pool or a member
+      at random and assert on it, so whether a bug is caught depends on the draw — that is how the
+      APR-is-non-zero assertion, the negative `units` in `PoolStatistics` and the missing `height`
+      above all hid. Either seed the choice or, better, pin the payloads as fixtures.
 - [ ] Sweep the remaining response types for `u64` fields that upstream can report as negative, the
       way `units`/`synthUnits`/`blockRewards` were. `savers`, `swaps`, `tvl`, `members`,
       `borrowers`, `nodes`, `network` and `stats` were checked against live data on 2026-09-24 and

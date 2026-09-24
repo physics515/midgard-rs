@@ -136,6 +136,7 @@ mod network_bond_metrics;
 mod network_data;
 mod node;
 mod node_list;
+mod optional_number;
 mod page_tokens;
 mod pool;
 mod pool_list;
