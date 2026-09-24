@@ -4,10 +4,11 @@ version = "0.0.5"
 edition = "2021"
 categories = ["api-bindings", "cryptography::cryptocurrencies"]
 license = "MIT"
-keywords = ["thorswap", "migard", "thorchain", "api"]
+keywords = ["thorswap", "midgard", "thorchain", "api"]
 readme = "README.md"
 description = "Thorchain Midgard API client for Rust"
 repository = "https://github.com/physics515/midgard-rs"
+documentation = "https://docs.rs/midgard-rs"
 
 [dependencies]
 serde = { version = "1", features = ["derive", "rc"] }
@@ -15,11 +16,20 @@ reqwest = { version = "0.12" }
 thiserror = { version = "1" }
 anyhow = { version = "1" }
 serde_json = { version = "1" }
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", default-features = false, features = ["time"] }
 serde_urlencoded = { version = "0.7" }
-rand = { version = "0.8" }
 serde-aux = { version = "4" }
 chrono = { version = "0.4", features = ["serde"] }
 serde_with = { version = "3", features = ["chrono"] }
 rust_decimal = { version = "1", features = ["serde", "serde-str"] }
+
+[dev-dependencies]
+# Test-only. `rand` is used by the randomised endpoint tests and `tokio-test`
+# by the doc-tests; both used to be normal dependencies, which every consumer
+# of this library paid for. `cargo build` warned about both by name.
+rand = { version = "0.8" }
 tokio-test = { version = "0.4" }
+# The library needs only `time` (for the rate limiter's sleep); the test
+# harness additionally needs the `#[tokio::test]` macro and a runtime to
+# drive it.
+tokio = { version = "1", default-features = false, features = ["time", "macros", "rt", "rt-multi-thread"] }
