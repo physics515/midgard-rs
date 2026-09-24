@@ -33,9 +33,9 @@ impl Midgard {
 	/// assert!(health_info.get_last_aggregated().is_some());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_health_info(&mut self) -> Result<HealthInfo> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

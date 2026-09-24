@@ -18,9 +18,9 @@ impl Midgard {
 	/// assert!(*balance.get_height() > 0);
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_balance(&mut self, address: &str, timestamp: Option<i64>, height: Option<u64>) -> Result<Balance> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

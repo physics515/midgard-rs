@@ -13,17 +13,17 @@ pub struct Midgard {
 }
 
 impl Midgard {
-        #[must_use]
+	#[must_use]
 	pub fn new() -> Self {
 		Self { config: Configuration::default(), last_call: Utc::now() }
 	}
 
-        #[must_use]
+	#[must_use]
 	pub fn with_config(config: Configuration) -> Self {
 		Self { config, last_call: Utc::now() }
 	}
 
-        #[must_use]
+	#[must_use]
 	pub const fn get_config(&self) -> &Configuration {
 		&self.config
 	}
@@ -32,7 +32,7 @@ impl Midgard {
 		self.config = config;
 	}
 
-        #[must_use]
+	#[must_use]
 	pub const fn get_last_call(&self) -> DateTime<Utc> {
 		self.last_call
 	}
@@ -60,28 +60,25 @@ impl Midgard {
 	}
 }
 
-
 #[cfg(test)]
 mod tests {
-        use rand::prelude::*;
+	use rand::prelude::*;
 	use serde_json::json;
-        use crate::GetActionList;
 
 	use super::*;
+	use crate::GetActionList;
 
-        #[tokio::test]
-        async fn endpoints() {
-                let mut midgard = Midgard::new();
+	#[tokio::test]
+	async fn endpoints() {
+		let mut midgard = Midgard::new();
 
-
-                // actions
-                let params = GetActionList::new(vec!["BTC.BTC".to_string()], 10);
+		// actions
+		let params = GetActionList::new(vec!["BTC.BTC".to_string()], 10);
 		let actions = midgard.get_actions(params).await.unwrap();
-                assert!(!actions.get_actions().get_actions().is_empty());
+		assert!(!actions.get_actions().get_actions().is_empty());
 
-                
-                // action pagination
-                let pool_list = midgard.get_pool_list(None, None).await.unwrap();
+		// action pagination
+		let pool_list = midgard.get_pool_list(None, None).await.unwrap();
 		let random_usize = thread_rng().gen_range(0..pool_list.get_assets().len());
 		let pool = pool_list.get_assets()[random_usize].clone();
 
@@ -97,12 +94,11 @@ mod tests {
 			assert!(!next_actions.get_actions().get_actions().is_empty());
 		}
 
-                // savers pools
-                let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-                let savers_pools = pool_list.get_savers_pools();
-                assert!(!savers_pools.is_empty());
+		// savers pools
+		let pool_list = midgard.get_pool_list(None, None).await.unwrap();
+		let savers_pools = pool_list.get_savers_pools();
+		assert!(!savers_pools.is_empty());
 
-                println!("savers pools: {}", json!(savers_pools));
-        }
-
+		println!("savers pools: {}", json!(savers_pools));
+	}
 }

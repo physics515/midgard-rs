@@ -21,9 +21,9 @@ impl Midgard {
 	/// assert!(!churn_list.get_churns().is_none());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_churn_list(&mut self) -> Result<ChurnsList> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

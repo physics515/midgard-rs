@@ -16,9 +16,9 @@ impl Midgard {
 	/// assert!(!network_data.get_active_bonds().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_network_data(&mut self) -> Result<NetworkData> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

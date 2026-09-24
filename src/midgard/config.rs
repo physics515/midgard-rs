@@ -7,17 +7,17 @@ pub struct Configuration {
 }
 
 impl Configuration {
-        #[must_use]
+	#[must_use]
 	pub const fn new(base_url: String, rate_limit_ms: u64) -> Self {
 		Self { base_url, rate_limit_ms }
 	}
 
-        #[must_use]
+	#[must_use]
 	pub fn get_base_url(&self) -> &str {
 		&self.base_url
 	}
 
-        #[must_use]
+	#[must_use]
 	pub const fn get_rate_limit_ms(&self) -> u64 {
 		self.rate_limit_ms
 	}

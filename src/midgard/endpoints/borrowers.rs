@@ -28,9 +28,9 @@ impl Midgard {
 	/// assert!(!borrowers_details.get_pools().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_borrowers_details(&mut self, address: &str) -> Result<BorrowersDetails> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -59,9 +59,9 @@ impl Midgard {
 	/// assert!(!borrowers_list.get_borrowers().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_borrowers_list(&mut self, asset: Option<String>) -> Result<BorrowersList> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

@@ -45,9 +45,9 @@ impl Midgard {
 	/// }
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_actions(&mut self, params: GetActionList) -> Result<ActionList> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

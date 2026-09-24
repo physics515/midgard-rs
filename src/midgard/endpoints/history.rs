@@ -66,9 +66,9 @@ impl Midgard {
 	/// assert!(!depth_history.get_intervals().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_depth_and_price_history(&mut self, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<DepthHistory> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -139,9 +139,9 @@ impl Midgard {
 	/// assert!(!depth_history.get_intervals().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_earnings_history(&mut self, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<EarningsHistory> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -211,9 +211,9 @@ impl Midgard {
 	/// assert!(!liquidity_change_history.get_intervals().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_liquidity_change_history(&mut self, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<LiquidityChangeHistory> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -280,9 +280,9 @@ impl Midgard {
 	/// assert!(!savers_history.get_intervals().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_savers_units_and_depth_history(&mut self, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<SaversHistory> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -346,9 +346,9 @@ impl Midgard {
 	/// assert!(!swaps_history.get_intervals().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_swaps_history(&mut self, pool: Option<&str>, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<SwapHistory> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -413,9 +413,9 @@ impl Midgard {
 	/// assert!(!tvl_history.get_intervals().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_total_value_locked_history(&mut self, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<TVLHistory> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

@@ -47,9 +47,9 @@ impl Midgard {
 	/// assert!(!member_details.get_pools().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_member_details(&mut self, address: &[String], show_savers: bool) -> Result<MemberDetails> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -86,9 +86,9 @@ impl Midgard {
 	/// assert!(!member_list.get_members().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_member_list(&mut self, pool: Option<String>) -> Result<MemberList> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

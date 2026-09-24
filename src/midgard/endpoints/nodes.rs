@@ -16,9 +16,9 @@ impl Midgard {
 	/// assert!(!node_list.get_nodes().is_empty());
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_node_list(&mut self) -> Result<NodeList> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

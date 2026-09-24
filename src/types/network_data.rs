@@ -74,7 +74,7 @@ impl NetworkData {
 	pub fn get_active_bonds(&self) -> Vec<u64> {
 		let mut active_bonds: Vec<u64> = Vec::new();
 		for bond in &self.active_bonds {
-                        let b = bond.parse::<u64>().unwrap_or_default();
+			let b = bond.parse::<u64>().unwrap_or_default();
 			active_bonds.push(b);
 		}
 		active_bonds
@@ -124,7 +124,7 @@ impl NetworkData {
 	pub fn get_standby_bonds(&self) -> Vec<u64> {
 		let mut standby_bonds: Vec<u64> = Vec::new();
 		for bond in &self.standby_bonds {
-                        let b = bond.parse::<u64>().unwrap_or_default();
+			let b = bond.parse::<u64>().unwrap_or_default();
 			standby_bonds.push(b);
 		}
 		standby_bonds

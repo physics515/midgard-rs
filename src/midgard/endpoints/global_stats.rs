@@ -21,9 +21,9 @@ impl Midgard {
 	/// assert!(*global_stats.get_add_liquidity_count() > 0);
 	/// # });
 	/// ```
-        /// 
-        /// # Errors
-        /// todo
+	///
+	/// # Errors
+	/// todo
 	pub async fn get_global_stats(&mut self) -> Result<GlobalStats> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

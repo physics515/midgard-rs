@@ -104,7 +104,7 @@ pub struct Pool {
 mod deserialize_decimal_with_nan {
 	use rust_decimal::Decimal;
 
-        #[allow(clippy::unnecessary_wraps, clippy::unnecessary_result_map_or_else)]
+	#[allow(clippy::unnecessary_wraps, clippy::unnecessary_result_map_or_else)]
 	pub fn deserialize<'de, D>(deserializer: D) -> Result<Decimal, D::Error>
 	where
 		D: serde::de::Deserializer<'de>,
