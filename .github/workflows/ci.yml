@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  # A build that resolves dependencies differently from Cargo.lock is not the
+  # build that was reviewed, so every cargo invocation here passes --locked.
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Required. Nothing here touches the network at runtime, so these jobs are a
+  # trustworthy signal even when a public Midgard instance is down.
+  # ---------------------------------------------------------------------------
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # rustfmt.toml uses imports_layout, reorder_impl_items and group_imports,
+      # all of which are still unstable, so formatting REQUIRES nightly rustfmt.
+      # The crate itself must build on stable; only the formatter is nightly.
+      - name: Install nightly rustfmt
+        run: |
+          rustup toolchain install nightly --profile minimal --component rustfmt
+      - run: cargo +nightly fmt --check
+
+  build:
+    name: build (${{ matrix.toolchain }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [stable, nightly]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ${{ matrix.toolchain }}
+        run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.toolchain }}
+      # The published crate must build on stable; nightly is only used for
+      # rustfmt. Building both keeps that promise honest.
+      - run: cargo +${{ matrix.toolchain }} build --locked --all-targets
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable clippy
+        run: rustup toolchain install stable --profile minimal --component clippy
+      - uses: Swatinem/rust-cache@v2
+      # src/lib.rs opts into pedantic + nursery, which are noisy by design, so
+      # this is not -D warnings yet. It fails only on errors; the warning count
+      # is printed so a reviewer can see whether a change moved it.
+      - run: cargo clippy --locked --all-targets
+
+  test-offline:
+    name: test (offline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable
+        run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      # Everything under midgard::endpoints:: and midgard::tests:: calls the
+      # live Midgard API; everything under types:: is pure (de)serialization.
+      # This job must stay green regardless of whether any public instance is
+      # reachable, so it runs only the latter.
+      - run: "cargo test --locked --lib -- --skip midgard::endpoints:: --skip midgard::tests::"
+
+  # ---------------------------------------------------------------------------
+  # Informational. These reach out to a public Midgard instance, so a red result
+  # may mean the crate is broken OR that the instance is down or rate-limiting.
+  # Never gate a merge on them; read them, and when they go red find out which
+  # of the two it was.
+  # ---------------------------------------------------------------------------
+  test-live:
+    name: test (live network, informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable
+        run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      - name: Check the default instance is actually reachable
+        id: reachable
+        run: |
+          set -o pipefail
+          url="https://gateway.liquify.com/chain/thorchain_midgard/v2/health"
+          code=$(curl -sS -m 30 -o /tmp/health.json -w '%{http_code}' "$url" || echo 000)
+          echo "HTTP $code from $url"
+          cat /tmp/health.json || true
+          if [ "$code" != "200" ]; then
+            echo "::warning::Default Midgard instance returned HTTP $code; live test failures below are not necessarily this crate's fault."
+          fi
+      # The client serialises itself to 1 request/second, so the full suite is
+      # slow by construction rather than by accident.
+      - run: cargo test --locked --lib
+      - run: cargo test --locked --doc
