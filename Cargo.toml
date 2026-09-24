@@ -12,7 +12,13 @@ documentation = "https://docs.rs/midgard-rs"
 
 [dependencies]
 serde = { version = "1", features = ["derive", "rc"] }
-reqwest = { version = "0.12" }
+# `default-features = false` drops reqwest's default `native-tls` backend,
+# which links OpenSSL — a C library, and this crate is 100% Rust with no
+# FFI. `rustls-tls` is the pure-Rust replacement and bundles the webpki
+# root store, so it does not depend on a system certificate store either.
+# `charset`, `http2` and `json`-free defaults are re-added by hand; the
+# crate parses JSON itself with serde_json, so `json` is deliberately off.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 thiserror = { version = "1" }
 anyhow = { version = "1" }
 serde_json = { version = "1" }
