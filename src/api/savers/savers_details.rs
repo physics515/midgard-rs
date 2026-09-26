@@ -1,4 +1,3 @@
-
 use crate::{APIError, SaversDetails};
 
 /// # Errors

@@ -124,7 +124,6 @@ pub struct Pool {
 	volume_24h: Decimal,
 }
 
-
 impl Pool {
 	#[must_use]
 	pub const fn get_annual_percentage_rate(&self) -> &Option<Decimal> {

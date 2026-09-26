@@ -1,4 +1,3 @@
-
 use crate::{APIError, DepthHistory, Interval};
 
 /// # Errors

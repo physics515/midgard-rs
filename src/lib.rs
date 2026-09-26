@@ -92,4 +92,6 @@ pub use types::*;
 
 mod api;
 mod midgard;
+#[cfg(test)]
+mod test_support;
 mod types;

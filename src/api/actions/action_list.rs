@@ -1,4 +1,3 @@
-
 use crate::{APIError, ActionList, GetActionList};
 
 /// Action List

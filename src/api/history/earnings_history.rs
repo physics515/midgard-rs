@@ -1,4 +1,3 @@
-
 use crate::{APIError, EarningsHistory, Interval};
 
 /// # Errors

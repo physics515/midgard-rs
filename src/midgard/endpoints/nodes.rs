@@ -22,9 +22,11 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	pub async fn get_node_list(&mut self) -> Result<NodeList, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;

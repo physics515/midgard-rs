@@ -66,10 +66,12 @@ mod tests {
 	use serde_json::json;
 
 	use super::*;
+	use crate::test_support::seeded_rng;
 	use crate::GetActionList;
 
 	#[tokio::test]
 	async fn endpoints() {
+		let mut rng = seeded_rng();
 		let mut midgard = Midgard::new();
 
 		// actions
@@ -79,7 +81,7 @@ mod tests {
 
 		// action pagination
 		let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-		let random_usize = thread_rng().gen_range(0..pool_list.get_assets().len());
+		let random_usize = rng.gen_range(0..pool_list.get_assets().len());
 		let pool = pool_list.get_assets()[random_usize].clone();
 
 		let mut params = GetActionList::new(vec![pool.clone()], 5);

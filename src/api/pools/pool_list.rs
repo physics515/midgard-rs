@@ -1,4 +1,3 @@
-
 use crate::{APIError, PoolList, PoolStatus, TimePeriod};
 
 /// # Errors

@@ -10,17 +10,14 @@ impl Midgard {
 	///
 	/// ```rust
 	/// use midgard_rs::Midgard;
-	/// use rand::prelude::*;
 	///
 	/// # tokio_test::block_on(async {
 	/// // Create a new instance of Midgard
 	/// let mut midgard = Midgard::new();
 	///
-	/// // Get two random addresses from the list of borrowers
+	/// // Details are requested for a comma-separated list of addresses
 	/// let borrowers = midgard.get_borrowers_list(None).await.unwrap();
-	/// let address_1 = borrowers.get_borrowers().choose(&mut rand::thread_rng()).unwrap().clone();
-	/// let address_2 = borrowers.get_borrowers().choose(&mut rand::thread_rng()).unwrap().clone();
-	/// let address = vec![address_1, address_2].join(",");
+	/// let address = borrowers.get_borrowers().iter().take(2).cloned().collect::<Vec<_>>().join(",");
 	///
 	/// // Get the borrowers details
 	/// let borrowers_details = midgard.get_borrowers_details(&address).await.unwrap();
@@ -34,9 +31,11 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	pub async fn get_borrowers_details(&mut self, address: &str) -> Result<BorrowersDetails, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
@@ -71,9 +70,11 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
@@ -92,16 +93,18 @@ mod tests {
 	use serde_json::json;
 
 	use super::*;
+	use crate::test_support::seeded_rng;
 
 	#[tokio::test]
 	async fn test_get_borrowers_details() {
+		let mut rng = seeded_rng();
 		// Create a new instance of Midgard
 		let mut midgard = Midgard::new();
 
-		// Get two random addresses from the list of borrowers
+		// Two borrowers, chosen by the seeded generator
 		let borrowers = midgard.get_borrowers_list(None).await.unwrap();
-		let address_1 = borrowers.get_borrowers().choose(&mut rand::thread_rng()).unwrap().clone();
-		let address_2 = borrowers.get_borrowers().choose(&mut rand::thread_rng()).unwrap().clone();
+		let address_1 = borrowers.get_borrowers().choose(&mut rng).unwrap().clone();
+		let address_2 = borrowers.get_borrowers().choose(&mut rng).unwrap().clone();
 		let address = vec![address_1, address_2].join(",");
 
 		// Get the borrowers details
