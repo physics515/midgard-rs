@@ -88,7 +88,7 @@ pub struct PoolStatistics {
 	earnings_annual_as_percent_of_depth: Option<Decimal>,
 
 	#[serde(rename = "liquidityUnits", deserialize_with = "deserialize_number_from_string")]
-	liquidity_units: u64,
+	liquidity_units: i64,
 
 	#[serde(rename = "poolAPY", with = "rust_decimal::serde::str_option")]
 	pool_apy: Option<Decimal>,
@@ -228,7 +228,7 @@ impl PoolStatistics {
 	}
 
 	#[must_use]
-	pub const fn get_liquidity_units(&self) -> &u64 {
+	pub const fn get_liquidity_units(&self) -> &i64 {
 		&self.liquidity_units
 	}
 

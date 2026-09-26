@@ -53,8 +53,11 @@ pub struct MemberPool {
 	#[serde(rename = "dateLastAdded")]
 	date_last_added: DateTime<Utc>,
 
+	/// Signed: a member who has withdrawn more than they added carries a
+	/// negative unit balance. Observed live on 2026-09-25 as `-200450712`
+	/// for `LTC.LTC`, which used to fail the whole response.
 	#[serde(rename = "liquidityUnits", deserialize_with = "deserialize_number_from_string")]
-	liquidity_units: u64,
+	liquidity_units: i64,
 
 	pool: String,
 
@@ -111,7 +114,7 @@ impl MemberPool {
 	}
 
 	#[must_use]
-	pub const fn get_liquidity_units(&self) -> &u64 {
+	pub const fn get_liquidity_units(&self) -> &i64 {
 		&self.liquidity_units
 	}
 
@@ -143,5 +146,40 @@ impl MemberPool {
 	#[must_use]
 	pub const fn get_rune_withdrawn(&self) -> &u64 {
 		&self.rune_withdrawn
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::MemberPool;
+
+	/// The exact `LTC.LTC` payload the live `/v2/member/{address}` endpoint
+	/// returned on 2026-09-25. `liquidityUnits` is negative — a member who has
+	/// withdrawn more than they added — which used to fail the whole response
+	/// with `invalid digit found in string`, intermittently and only for the
+	/// members unlucky enough to be drawn by the randomised endpoint test.
+	#[test]
+	fn deserializes_a_negative_liquidity_units_balance() {
+		let json = r#"{
+			"assetAdded": "0",
+			"assetAddress": "",
+			"assetDeposit": "0",
+			"assetPending": "0",
+			"assetWithdrawn": "4437341",
+			"dateFirstAdded": "0",
+			"dateLastAdded": "0",
+			"liquidityUnits": "-200450712",
+			"pool": "LTC.LTC",
+			"runeAdded": "0",
+			"runeAddress": "",
+			"runeDeposit": "0",
+			"runePending": "0",
+			"runeWithdrawn": "391094680"
+		}"#;
+
+		let pool: MemberPool = serde_json::from_str(json).unwrap();
+		assert_eq!(pool.get_liquidity_units(), &-200_450_712_i64);
+		assert_eq!(pool.get_pool(), "LTC.LTC");
+		assert_eq!(pool.get_rune_withdrawn(), &391_094_680_u64);
 	}
 }
