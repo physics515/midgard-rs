@@ -55,13 +55,14 @@ Bootstrapped 2026-09-24 from a survey of the repo at `8ae8134`.
       `live_tests` module, and CI keys off exactly that.
 - [ ] **Re-check the default base URL on every run.** It is a single point of failure outside this
       project's control and has already broken once. Liquify rate-limits to 50,000 requests/day/IP.
-- [ ] Public API returns `anyhow::Result` from every endpoint, which gives consumers nothing to
-      match on — the concrete `APIError` is erased into it. Return `Result<_, APIError>` instead.
-      `APIError` is now `#[non_exhaustive]`, so adding variants is no longer breaking. Breaking
-      change; takes a minor bump.
-- [ ] `Pool`'s `lpLuvi` uses the older NaN-to-zero coercion in `pool.rs`, which reports a
-      misleading `0` for an undefined LUVI. Align it with the `Option<Decimal>` model now used by
-      `decimal_nan::optional` for `luvi`, `luviIncrease` and `saversYieldShare`.
+- [x] Public API returns `Result<_, APIError>` instead of `anyhow::Result`, so consumers can match
+      on the failure. `APIError::QueryEncode` was added for the query-string errors `anyhow` used to
+      absorb, and `anyhow` is dropped from the dependency set. Shipped in 0.2.0.
+- [x] `Pool`'s silent NaN-to-zero coercion is gone — and it was worse than `lpLuvi`: the same
+      helper covered 23 fields and swallowed *every* parse error into `0`, not just `"NaN"`. A live
+      scan of all 43 pools showed only `lpLuvi` and `saversYieldShare` ever carry `"NaN"`, so the
+      seven ratio-shaped fields are now `Option<Decimal>` and the other sixteen parse strictly.
+      Shipped in 0.2.0.
 
 ## Phase 2 — API coverage vs upstream Midgard v2
 
@@ -94,17 +95,17 @@ crate implements 24 of the 38 documented `/v2/*` paths.
       schema and genuinely absent for any outbound that has not landed in a block — 31 of the 40
       outbounds in a plain `/v2/actions?limit=50`. It failed the whole actions response. Now
       `Option<u64>`, on `ActionIn` too, along with the spec's optional `affiliate` flag.
-- [ ] **`get_member_details` intermittently fails with `Serde Error: invalid digit found in
-      string`.** Caught by CI on 2026-09-24 (`test (live network)`, run 36052198128) and seen once
-      more locally; not reproducible on demand, because the test picks a random pool and then random
-      members of it. About 40 member payloads were scanned by hand across a dozen pools without
-      finding the offending value — no negative numbers and no non-integer strings in any field
-      `MemberPool` parses as `u64`. Needs the failing payload captured rather than guessed at: make
-      the endpoint tests log the raw body on a parse failure, or wait for the fixture suite below.
-- [ ] **The randomised endpoint tests are flaky by construction.** Several pick a pool or a member
-      at random and assert on it, so whether a bug is caught depends on the draw — that is how the
-      APR-is-non-zero assertion, the negative `units` in `PoolStatistics` and the missing `height`
-      above all hid. Either seed the choice or, better, pin the payloads as fixtures.
+- [x] **`get_member_details`'s intermittent `invalid digit found in string` is fixed.** Sampling
+      randomly across all 15,115 members and checking every `u64`-typed field programmatically found
+      it on the first pass: `"liquidityUnits": "-200450712"` on `LTC.LTC`, a member who has withdrawn
+      more than they added. One payload in ~900, which is why the randomised test caught it only
+      sometimes. `MemberPool::liquidity_units` and the identical latent case in
+      `PoolStatistics::liquidity_units` are now `i64`, with the payload pinned as a regression test.
+      Shipped in 0.2.0.
+- [x] **The randomised endpoint tests are deterministic.** The draw is seeded from a constant via
+      `test_support::seeded_rng`, so a run picks the same targets and a failure reproduces;
+      `MIDGARD_TEST_SEED` re-rolls it to go hunting deliberately. The five doc examples that picked
+      at random now use a named pool or the first list entry. Shipped in 0.2.0.
 - [ ] Sweep the remaining response types for `u64` fields that upstream can report as negative, the
       way `units`/`synthUnits`/`blockRewards` were. `savers`, `swaps`, `tvl`, `members`,
       `borrowers`, `nodes`, `network` and `stats` were checked against live data on 2026-09-24 and
