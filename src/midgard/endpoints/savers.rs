@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::Midgard;
 use crate::{api_get_savers_details, SaversDetails};
 
@@ -33,7 +33,7 @@ impl Midgard {
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_savers_details(&mut self, address: &[String]) -> Result<SaversDetails> {
+	pub async fn get_savers_details(&mut self, address: &[String]) -> Result<SaversDetails, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 

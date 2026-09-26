@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::{api_get_details_of_pool, api_get_known_pool_list, api_get_pool_list, api_get_statistics_of_pool, KnownPoolList, Midgard, Pool, PoolList, PoolStatistics, PoolStatus, TimePeriod};
 
 impl Midgard {
@@ -29,7 +29,7 @@ impl Midgard {
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_pool_list(&mut self, status: Option<PoolStatus>, period: Option<TimePeriod>) -> Result<PoolList> {
+	pub async fn get_pool_list(&mut self, status: Option<PoolStatus>, period: Option<TimePeriod>) -> Result<PoolList, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -69,7 +69,7 @@ impl Midgard {
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_details_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<Pool> {
+	pub async fn get_details_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<Pool, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -98,7 +98,7 @@ impl Midgard {
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
 	/// this crate expects — which, because the HTTP status is not yet
 	/// checked, is also what an error page from the instance looks like.
-	pub async fn get_known_pool_list(&mut self) -> Result<KnownPoolList> {
+	pub async fn get_known_pool_list(&mut self) -> Result<KnownPoolList, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -138,7 +138,7 @@ impl Midgard {
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_statistics_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<PoolStatistics> {
+	pub async fn get_statistics_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<PoolStatistics, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 

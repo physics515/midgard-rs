@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::{api_get_borrowers_details, api_get_borrowers_list, BorrowersDetails, BorrowersList, Midgard};
 
 impl Midgard {
@@ -37,7 +37,7 @@ impl Midgard {
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
 	/// this crate expects — which, because the HTTP status is not yet
 	/// checked, is also what an error page from the instance looks like.
-	pub async fn get_borrowers_details(&mut self, address: &str) -> Result<BorrowersDetails> {
+	pub async fn get_borrowers_details(&mut self, address: &str) -> Result<BorrowersDetails, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -77,7 +77,7 @@ impl Midgard {
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_borrowers_list(&mut self, asset: Option<String>) -> Result<BorrowersList> {
+	pub async fn get_borrowers_list(&mut self, asset: Option<String>) -> Result<BorrowersList, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 

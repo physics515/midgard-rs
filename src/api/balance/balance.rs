@@ -1,4 +1,3 @@
-use anyhow::{bail, Result};
 
 use crate::{APIError, Balance};
 
@@ -7,10 +6,10 @@ use crate::{APIError, Balance};
 /// 2. JSON Parsing Error
 /// 3. Faild to Parse URL Parameters
 #[allow(clippy::module_name_repetitions)]
-pub async fn api_get_balance(base_url: &str, address: &str, timestamp: Option<i64>, height: Option<u64>) -> Result<Balance> {
+pub async fn api_get_balance(base_url: &str, address: &str, timestamp: Option<i64>, height: Option<u64>) -> Result<Balance, APIError> {
 	let mut endpoint = base_url.to_string() + "balance/" + address;
 	if timestamp.is_some() && height.is_some() {
-		bail!(APIError::InvalidParameter("Only one of timestamp or height can be specified, not both, if both are specified the request will fail.".to_string()));
+		return Err(APIError::InvalidParameter("Only one of timestamp or height can be specified, not both, if both are specified the request will fail.".to_string()));
 	}
 	if timestamp.is_some() || height.is_some() {
 		endpoint.push('?');
@@ -25,10 +24,7 @@ pub async fn api_get_balance(base_url: &str, address: &str, timestamp: Option<i6
 
 	let response = crate::api::http::get_body(&endpoint).await?;
 
-	let res: Balance = match serde_json::from_str(&response) {
-		Ok(res) => res,
-		Err(e) => bail!(APIError::SerdeError(e)),
-	};
+	let res: Balance = serde_json::from_str(&response)?;
 
 	Ok(res)
 }

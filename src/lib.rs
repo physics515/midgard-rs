@@ -37,13 +37,15 @@
 //!
 //! ## Errors
 //!
-//! Every endpoint returns `anyhow::Result`, and the underlying error is an
-//! [`APIError`]: [`APIError::HttpStatus`] when the instance answered with a
-//! non-success status, [`APIError::ReqwestError`] when the request could not be
-//! made or read, [`APIError::SerdeError`] when the body was not the JSON this
-//! crate expects, [`APIError::InvalidParameter`] when the arguments were
-//! rejected before any request was made, and [`APIError::ClientBuild`] when the
-//! HTTP client could not be constructed. The enum is `#[non_exhaustive]`.
+//! Every endpoint returns `Result<_, `[`APIError`]`>`, so the failure is a
+//! concrete enum you can match on: [`APIError::HttpStatus`] when the instance
+//! answered with a non-success status, [`APIError::ReqwestError`] when the
+//! request could not be made or read, [`APIError::SerdeError`] when the body
+//! was not the JSON this crate expects, [`APIError::InvalidParameter`] when the
+//! arguments were rejected before any request was made,
+//! [`APIError::QueryEncode`] when a query string could not be encoded, and
+//! [`APIError::ClientBuild`] when the HTTP client could not be constructed. The
+//! enum is `#[non_exhaustive]`, so new variants are not a breaking change.
 //!
 //! ## TLS
 //!

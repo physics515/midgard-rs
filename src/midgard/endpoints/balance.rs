@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::{api_get_balance, Balance, Midgard};
 
 impl Midgard {
@@ -33,7 +33,7 @@ impl Midgard {
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_balance(&mut self, address: &str, timestamp: Option<i64>, height: Option<u64>) -> Result<Balance> {
+	pub async fn get_balance(&mut self, address: &str, timestamp: Option<i64>, height: Option<u64>) -> Result<Balance, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 

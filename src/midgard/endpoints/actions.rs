@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::Midgard;
 use crate::{api_get_action_list, ActionList, GetActionList};
 
@@ -57,7 +57,7 @@ impl Midgard {
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_actions(&mut self, params: GetActionList) -> Result<ActionList> {
+	pub async fn get_actions(&mut self, params: GetActionList) -> Result<ActionList, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 

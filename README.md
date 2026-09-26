@@ -44,8 +44,8 @@ The default is exported as `midgard_rs::DEFAULT_BASE_URL` if you want to build a
 
 ## Errors
 
-Every endpoint returns `anyhow::Result`, and the underlying error is an
-`APIError`:
+Every endpoint returns `Result<_, APIError>` — a concrete enum you can match
+on, rather than an erased error:
 
 | Variant | Means |
 | --- | --- |
@@ -53,9 +53,10 @@ Every endpoint returns `anyhow::Result`, and the underlying error is an
 | `ReqwestError` | The request could not be made, or its body could not be read. |
 | `SerdeError` | The response was not the JSON this crate expects. |
 | `InvalidParameter` | The arguments were rejected before any request was made — `get_balance` with both a timestamp and a height, or a `history/*` call with `count` outside `1..=400`. |
+| `QueryEncode` | A request's query string could not be encoded from the arguments given. |
 | `ClientBuild` | The HTTP client could not be constructed. |
 
-`APIError` is `#[non_exhaustive]`.
+`APIError` is `#[non_exhaustive]`, so new variants are added without a breaking change.
 
 ## TLS
 

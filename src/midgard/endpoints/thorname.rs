@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::Midgard;
 use crate::{api_get_thorname_details, api_get_thorname_owner, api_get_thorname_reverse_lookup, ThornameDetails, ThornameOwner, ThornameReverseLookup};
 
@@ -27,7 +27,7 @@ impl Midgard {
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
 	/// this crate expects — which, because the HTTP status is not yet
 	/// checked, is also what an error page from the instance looks like.
-	pub async fn get_thorname_details(&mut self, name: &str) -> Result<ThornameDetails> {
+	pub async fn get_thorname_details(&mut self, name: &str) -> Result<ThornameDetails, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -56,7 +56,7 @@ impl Midgard {
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
 	/// this crate expects — which, because the HTTP status is not yet
 	/// checked, is also what an error page from the instance looks like.
-	pub async fn get_thorname_owner(&mut self, address: &str) -> Result<ThornameOwner> {
+	pub async fn get_thorname_owner(&mut self, address: &str) -> Result<ThornameOwner, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -84,7 +84,7 @@ impl Midgard {
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
 	/// this crate expects — which, because the HTTP status is not yet
 	/// checked, is also what an error page from the instance looks like.
-	pub async fn get_thorname_reverse_lookup(&mut self, address: &str) -> Result<ThornameReverseLookup> {
+	pub async fn get_thorname_reverse_lookup(&mut self, address: &str) -> Result<ThornameReverseLookup, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
