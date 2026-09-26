@@ -1,5 +1,3 @@
-use anyhow::{bail, Result};
-
 use crate::{APIError, ActionList, GetActionList};
 
 /// Action List
@@ -56,7 +54,7 @@ use crate::{APIError, ActionList, GetActionList};
 /// 2. JSON Parsing Error
 /// 3. Faild to Parse URL Parameters
 #[allow(clippy::module_name_repetitions)]
-pub async fn api_get_action_list(base_url: &str, parameters: GetActionList) -> Result<ActionList> {
+pub async fn api_get_action_list(base_url: &str, parameters: GetActionList) -> Result<ActionList, APIError> {
 	let mut params = vec![];
 
 	params.push(("asset", parameters.asset.join(",")));
@@ -104,10 +102,7 @@ pub async fn api_get_action_list(base_url: &str, parameters: GetActionList) -> R
 
 	let response = crate::api::http::get_body(&endpoint).await?;
 
-	let res: ActionList = match serde_json::from_str(&response) {
-		Ok(res) => res,
-		Err(e) => bail!(APIError::SerdeError(e)),
-	};
+	let res: ActionList = serde_json::from_str(&response)?;
 
 	Ok(res)
 }

@@ -1,5 +1,3 @@
-use anyhow::{bail, Result};
-
 use crate::{APIError, DepthHistory, Interval};
 
 /// # Errors
@@ -7,7 +5,7 @@ use crate::{APIError, DepthHistory, Interval};
 /// 2. JSON Parsing Error
 /// 3. Faild to Parse URL Parameters
 #[allow(clippy::module_name_repetitions)]
-pub async fn api_get_depth_and_price_history(base_url: &str, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<DepthHistory> {
+pub async fn api_get_depth_and_price_history(base_url: &str, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<DepthHistory, APIError> {
 	let mut endpoint = base_url.to_string() + "history/depths/" + pool;
 	if interval.is_some() || count.is_some() {
 		endpoint.push('?');
@@ -17,7 +15,7 @@ pub async fn api_get_depth_and_price_history(base_url: &str, pool: &str, interva
 		}
 		if let Some(count) = count {
 			if !(1..=400).contains(&count) {
-				bail!(APIError::InvalidParameter("count".to_string()));
+				return Err(APIError::InvalidParameter("count".to_string()));
 			}
 			endpoint.push_str(&serde_urlencoded::to_string([("count", count.to_string())])?);
 			endpoint.push('&');
@@ -33,10 +31,7 @@ pub async fn api_get_depth_and_price_history(base_url: &str, pool: &str, interva
 
 	let response = crate::api::http::get_body(&endpoint).await?;
 
-	let res: DepthHistory = match serde_json::from_str(&response) {
-		Ok(res) => res,
-		Err(e) => bail!(APIError::SerdeError(e)),
-	};
+	let res: DepthHistory = serde_json::from_str(&response)?;
 
 	Ok(res)
 }

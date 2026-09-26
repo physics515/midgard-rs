@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::{api_get_member_details, api_get_member_list, MemberDetails, MemberList, Midgard};
 
 impl Midgard {
@@ -24,21 +24,15 @@ impl Midgard {
 	/// ```rust
 	/// use midgard_rs::Midgard;
 	/// use midgard_rs::MemberDetails;
-	/// use rand::prelude::*;
 	///
 	/// # tokio_test::block_on(async {
 	/// let mut midgard = Midgard::new();
 	///
-	/// // get random pool members list
-	/// let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-	/// let random_usize = thread_rng().gen_range(0..pool_list.get_assets().len());
-	/// let pool = pool_list.get_assets()[random_usize].clone();
-	/// let member_list = midgard.get_member_list(Some(pool)).await.unwrap();
+	/// // the members of one pool
+	/// let member_list = midgard.get_member_list(Some("BTC.BTC".to_string())).await.unwrap();
 	///
-	/// // get random member addresses
-	/// let random_usize = thread_rng().gen_range(0..member_list.get_members().len());
-	/// let random_usize_2 = thread_rng().gen_range(0..member_list.get_members().len());
-	/// let address = vec![member_list.get_members()[random_usize].clone(), member_list.get_members()[random_usize_2].clone()];
+	/// // details for the first two of them
+	/// let address: Vec<String> = member_list.get_members().iter().take(2).cloned().collect();
 	///
 	/// // get member details
 	/// let show_savers = false;
@@ -53,13 +47,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_member_details(&mut self, address: &[String], show_savers: bool) -> Result<MemberDetails> {
+	pub async fn get_member_details(&mut self, address: &[String], show_savers: bool) -> Result<MemberDetails, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -79,18 +75,12 @@ impl Midgard {
 	/// ```rust
 	/// use midgard_rs::Midgard;
 	/// use midgard_rs::MemberList;
-	/// use rand::prelude::*;
 	///
 	/// # tokio_test::block_on(async {
 	/// let mut midgard = Midgard::new();
 	///
-	/// // get random pool
-	/// let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-	/// let random_usize = thread_rng().gen_range(0..pool_list.get_assets().len());
-	/// let pool = pool_list.get_assets()[random_usize].clone();
-	///
-	/// // get member list
-	/// let member_list = midgard.get_member_list(Some(pool)).await.unwrap();
+	/// // every member of one pool; pass None for every member of every pool
+	/// let member_list = midgard.get_member_list(Some("BTC.BTC".to_string())).await.unwrap();
 	///
 	/// assert!(!member_list.get_members().is_empty());
 	/// # });
@@ -101,13 +91,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_member_list(&mut self, pool: Option<String>) -> Result<MemberList> {
+	pub async fn get_member_list(&mut self, pool: Option<String>) -> Result<MemberList, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -122,20 +114,22 @@ mod tests {
 	use serde_json::json;
 
 	use super::*;
+	use crate::test_support::seeded_rng;
 
 	#[tokio::test]
 	async fn test_get_member_details() {
+		let mut rng = seeded_rng();
 		let mut midgard = Midgard::new();
 
-		// get random pool members list
+		// a pool, chosen by the seeded generator
 		let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-		let random_usize = thread_rng().gen_range(0..pool_list.get_assets().len());
+		let random_usize = rng.gen_range(0..pool_list.get_assets().len());
 		let pool = pool_list.get_assets()[random_usize].clone();
 		let member_list = midgard.get_member_list(Some(pool)).await.unwrap();
 
-		// get random member addresses
-		let random_usize = thread_rng().gen_range(0..member_list.get_members().len());
-		let random_usize_2 = thread_rng().gen_range(0..member_list.get_members().len());
+		// two of its members, likewise seeded
+		let random_usize = rng.gen_range(0..member_list.get_members().len());
+		let random_usize_2 = rng.gen_range(0..member_list.get_members().len());
 		let address = vec![member_list.get_members()[random_usize].clone(), member_list.get_members()[random_usize_2].clone()];
 
 		// get member details
@@ -147,11 +141,12 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_get_member_list() {
+		let mut rng = seeded_rng();
 		let mut midgard = Midgard::new();
 
-		// get random pool
+		// a pool, chosen by the seeded generator
 		let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-		let random_usize = thread_rng().gen_range(0..pool_list.get_assets().len());
+		let random_usize = rng.gen_range(0..pool_list.get_assets().len());
 		let pool = pool_list.get_assets()[random_usize].clone();
 
 		// get member list

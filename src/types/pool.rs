@@ -36,62 +36,62 @@ use crate::PoolStatus;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Pool {
-	#[serde(rename = "annualPercentageRate", with = "deserialize_decimal_with_nan")]
-	annual_percentage_rate: Decimal,
+	#[serde(rename = "annualPercentageRate", with = "crate::types::decimal_nan::optional")]
+	annual_percentage_rate: Option<Decimal>,
 
 	asset: String,
 
-	#[serde(rename = "assetDepth", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "assetDepth", with = "rust_decimal::serde::str")]
 	asset_depth: Decimal,
 
-	#[serde(rename = "assetPrice", with = "deserialize_decimal_with_nan")]
-	asset_price: Decimal,
+	#[serde(rename = "assetPrice", with = "crate::types::decimal_nan::optional")]
+	asset_price: Option<Decimal>,
 
-	#[serde(rename = "assetPriceUSD", with = "deserialize_decimal_with_nan")]
-	asset_price_usd: Decimal,
+	#[serde(rename = "assetPriceUSD", with = "crate::types::decimal_nan::optional")]
+	asset_price_usd: Option<Decimal>,
 
 	/// Asset depth at which a swap would move the price 2% down. Added
 	/// upstream in Midgard 2.34.0.
-	#[serde(rename = "depthMinus2Percent", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "depthMinus2Percent", with = "rust_decimal::serde::str")]
 	depth_minus_2_percent: Decimal,
 
 	/// Asset depth at which a swap would move the price 2% up. Added upstream
 	/// in Midgard 2.34.0.
-	#[serde(rename = "depthPlus2Percent", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "depthPlus2Percent", with = "rust_decimal::serde::str")]
 	depth_plus_2_percent: Decimal,
 
-	#[serde(with = "deserialize_decimal_with_nan")]
+	#[serde(with = "rust_decimal::serde::str")]
 	earnings: Decimal,
 
 	/// Total pool liquidity valued in USD. Added upstream in Midgard 2.34.1.
-	#[serde(rename = "liquidityInUSD", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "liquidityInUSD", with = "rust_decimal::serde::str")]
 	liquidity_in_usd: Decimal,
 
-	#[serde(rename = "earningsAnnualAsPercentOfDepth", with = "deserialize_decimal_with_nan")]
-	earnings_annual_as_percent_of_depth: Decimal,
+	#[serde(rename = "earningsAnnualAsPercentOfDepth", with = "crate::types::decimal_nan::optional")]
+	earnings_annual_as_percent_of_depth: Option<Decimal>,
 
-	#[serde(rename = "liquidityUnits", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "liquidityUnits", with = "rust_decimal::serde::str")]
 	liquidity_units: Decimal,
 
-	#[serde(rename = "lpLuvi", with = "deserialize_decimal_with_nan")]
-	lp_luvi: Decimal,
+	#[serde(rename = "lpLuvi", with = "crate::types::decimal_nan::optional")]
+	lp_luvi: Option<Decimal>,
 
-	#[serde(rename = "nativeDecimal", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "nativeDecimal", with = "rust_decimal::serde::str")]
 	native_decimal: Decimal,
 
-	#[serde(rename = "poolAPY", with = "deserialize_decimal_with_nan")]
-	pool_apy: Decimal,
+	#[serde(rename = "poolAPY", with = "crate::types::decimal_nan::optional")]
+	pool_apy: Option<Decimal>,
 
-	#[serde(rename = "runeDepth", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "runeDepth", with = "rust_decimal::serde::str")]
 	rune_depth: Decimal,
 
-	#[serde(rename = "saversAPR", with = "deserialize_decimal_with_nan")]
-	savers_apr: Decimal,
+	#[serde(rename = "saversAPR", with = "crate::types::decimal_nan::optional")]
+	savers_apr: Option<Decimal>,
 
-	#[serde(rename = "saversDepth", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "saversDepth", with = "rust_decimal::serde::str")]
 	savers_depth: Decimal,
 
-	#[serde(rename = "saversUnits", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "saversUnits", with = "rust_decimal::serde::str")]
 	savers_units: Decimal,
 
 	/// Share of pool yield paid to savers.
@@ -105,47 +105,28 @@ pub struct Pool {
 
 	status: PoolStatus,
 
-	#[serde(rename = "synthSupply", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "synthSupply", with = "rust_decimal::serde::str")]
 	synth_supply: Decimal,
 
-	#[serde(rename = "synthUnits", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "synthUnits", with = "rust_decimal::serde::str")]
 	synth_units: Decimal,
 
-	#[serde(rename = "totalCollateral", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "totalCollateral", with = "rust_decimal::serde::str")]
 	total_collateral: Decimal,
 
-	#[serde(rename = "totalDebtTor", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "totalDebtTor", with = "rust_decimal::serde::str")]
 	total_debt_tor: Decimal,
 
-	#[serde(with = "deserialize_decimal_with_nan")]
+	#[serde(with = "rust_decimal::serde::str")]
 	units: Decimal,
 
-	#[serde(rename = "volume24h", with = "deserialize_decimal_with_nan")]
+	#[serde(rename = "volume24h", with = "rust_decimal::serde::str")]
 	volume_24h: Decimal,
-}
-
-mod deserialize_decimal_with_nan {
-	use rust_decimal::Decimal;
-
-	#[allow(clippy::unnecessary_wraps, clippy::unnecessary_result_map_or_else)]
-	pub fn deserialize<'de, D>(deserializer: D) -> Result<Decimal, D::Error>
-	where
-		D: serde::de::Deserializer<'de>,
-	{
-		Ok(rust_decimal::serde::str::deserialize(deserializer).map_or_else(|_| Decimal::from(0), |d| d))
-	}
-
-	pub fn serialize<S>(value: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: serde::Serializer,
-	{
-		rust_decimal::serde::str::serialize(value, serializer)
-	}
 }
 
 impl Pool {
 	#[must_use]
-	pub const fn get_annual_percentage_rate(&self) -> &Decimal {
+	pub const fn get_annual_percentage_rate(&self) -> &Option<Decimal> {
 		&self.annual_percentage_rate
 	}
 
@@ -160,12 +141,12 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_asset_price(&self) -> &Decimal {
+	pub const fn get_asset_price(&self) -> &Option<Decimal> {
 		&self.asset_price
 	}
 
 	#[must_use]
-	pub const fn get_asset_price_usd(&self) -> &Decimal {
+	pub const fn get_asset_price_usd(&self) -> &Option<Decimal> {
 		&self.asset_price_usd
 	}
 
@@ -190,7 +171,7 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_earnings_annual_as_percent_of_depth(&self) -> &Decimal {
+	pub const fn get_earnings_annual_as_percent_of_depth(&self) -> &Option<Decimal> {
 		&self.earnings_annual_as_percent_of_depth
 	}
 
@@ -200,7 +181,7 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_lp_luvi(&self) -> &Decimal {
+	pub const fn get_lp_luvi(&self) -> &Option<Decimal> {
 		&self.lp_luvi
 	}
 
@@ -210,7 +191,7 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_pool_apy(&self) -> &Decimal {
+	pub const fn get_pool_apy(&self) -> &Option<Decimal> {
 		&self.pool_apy
 	}
 
@@ -220,7 +201,7 @@ impl Pool {
 	}
 
 	#[must_use]
-	pub const fn get_savers_apr(&self) -> &Decimal {
+	pub const fn get_savers_apr(&self) -> &Option<Decimal> {
 		&self.savers_apr
 	}
 

@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::{api_get_depth_and_price_history, api_get_earnings_history, api_get_liquidity_change_history, api_get_savers_units_and_depth_history, api_get_swaps_history, api_get_total_value_locked_history, DepthHistory, EarningsHistory, Interval, LiquidityChangeHistory, Midgard, SaversHistory, SwapHistory, TVLHistory};
 
 impl Midgard {
@@ -75,13 +75,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_depth_and_price_history(&mut self, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<DepthHistory> {
+	pub async fn get_depth_and_price_history(&mut self, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<DepthHistory, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -160,13 +162,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_earnings_history(&mut self, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<EarningsHistory> {
+	pub async fn get_earnings_history(&mut self, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<EarningsHistory, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -244,13 +248,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_liquidity_change_history(&mut self, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<LiquidityChangeHistory> {
+	pub async fn get_liquidity_change_history(&mut self, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<LiquidityChangeHistory, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -325,13 +331,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_savers_units_and_depth_history(&mut self, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<SaversHistory> {
+	pub async fn get_savers_units_and_depth_history(&mut self, pool: &str, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<SaversHistory, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -403,13 +411,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_swaps_history(&mut self, pool: Option<&str>, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<SwapHistory> {
+	pub async fn get_swaps_history(&mut self, pool: Option<&str>, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<SwapHistory, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -482,13 +492,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_total_value_locked_history(&mut self, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<TVLHistory> {
+	pub async fn get_total_value_locked_history(&mut self, interval: Option<Interval>, count: Option<usize>, to: Option<u64>, from: Option<u64>) -> Result<TVLHistory, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 

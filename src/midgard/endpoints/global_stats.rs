@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::{api_get_global_stats, GlobalStats, Midgard};
 
 impl Midgard {
@@ -27,10 +27,12 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
-	pub async fn get_global_stats(&mut self) -> Result<GlobalStats> {
+	/// this crate expects.
+	pub async fn get_global_stats(&mut self) -> Result<GlobalStats, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 

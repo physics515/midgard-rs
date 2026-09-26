@@ -1,5 +1,3 @@
-use anyhow::{bail, Result};
-
 use crate::{APIError, BorrowersList};
 
 /// # Errors
@@ -7,7 +5,7 @@ use crate::{APIError, BorrowersList};
 /// 2. JSON Parsing Error
 /// 3. Faild to Parse URL Parameters
 #[allow(clippy::module_name_repetitions)]
-pub async fn api_get_borrowers_list(base_url: &str, asset: Option<String>) -> Result<BorrowersList> {
+pub async fn api_get_borrowers_list(base_url: &str, asset: Option<String>) -> Result<BorrowersList, APIError> {
 	let mut endpoint = base_url.to_string() + "borrowers";
 	if let Some(asset) = asset {
 		endpoint.push('?');
@@ -16,10 +14,7 @@ pub async fn api_get_borrowers_list(base_url: &str, asset: Option<String>) -> Re
 
 	let response = crate::api::http::get_body(&endpoint).await?;
 
-	let res: BorrowersList = match serde_json::from_str(&response) {
-		Ok(res) => res,
-		Err(e) => bail!(APIError::SerdeError(e)),
-	};
+	let res: BorrowersList = serde_json::from_str(&response)?;
 
 	Ok(res)
 }

@@ -1,5 +1,3 @@
-use anyhow::{bail, Result};
-
 use crate::{APIError, PoolList, PoolStatus, TimePeriod};
 
 /// # Errors
@@ -7,7 +5,7 @@ use crate::{APIError, PoolList, PoolStatus, TimePeriod};
 /// 2. JSON Parsing Error
 /// 3. Faild to Parse URL Parameters
 #[allow(clippy::module_name_repetitions)]
-pub async fn api_get_pool_list(base_url: &str, status: Option<PoolStatus>, period: Option<TimePeriod>) -> Result<PoolList> {
+pub async fn api_get_pool_list(base_url: &str, status: Option<PoolStatus>, period: Option<TimePeriod>) -> Result<PoolList, APIError> {
 	let period = period.unwrap_or_default();
 
 	let mut params = vec![];
@@ -27,10 +25,7 @@ pub async fn api_get_pool_list(base_url: &str, status: Option<PoolStatus>, perio
 
 	let response = crate::api::http::get_body(&endpoint).await?;
 
-	let res: PoolList = match serde_json::from_str(&response) {
-		Ok(res) => res,
-		Err(e) => bail!(APIError::SerdeError(e)),
-	};
+	let res: PoolList = serde_json::from_str(&response)?;
 
 	Ok(res)
 }

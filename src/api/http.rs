@@ -4,7 +4,6 @@
 //! status check and the body read are written once rather than twenty-five
 //! times, and every request identifies this crate to the instance it calls.
 
-use anyhow::{bail, Result};
 use reqwest::Client;
 
 use crate::APIError;
@@ -37,10 +36,10 @@ const CLIENT_ID: &str = concat!("midgard-rs/", env!("CARGO_PKG_VERSION"));
 /// # Errors
 /// Returns [`APIError::ClientBuild`] if `reqwest` cannot initialise its TLS
 /// backend.
-fn client() -> Result<Client> {
+fn client() -> Result<Client, APIError> {
 	match Client::builder().user_agent(CLIENT_ID).build() {
 		Ok(client) => Ok(client),
-		Err(e) => bail!(APIError::ClientBuild(e.to_string())),
+		Err(e) => return Err(APIError::ClientBuild(e.to_string())),
 	}
 }
 
@@ -64,21 +63,15 @@ const MAX_ERROR_BODY: usize = 512;
 ///   could not be read.
 /// * [`APIError::HttpStatus`] if the instance answered with a non-success
 ///   status.
-pub async fn get_body(endpoint: &str) -> Result<String> {
-	let response = match client()?.get(endpoint).header("x-client-id", CLIENT_ID).send().await {
-		Ok(response) => response,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
+pub async fn get_body(endpoint: &str) -> Result<String, APIError> {
+	let response = client()?.get(endpoint).header("x-client-id", CLIENT_ID).send().await?;
 
 	let status = response.status();
 
-	let body = match response.text().await {
-		Ok(body) => body,
-		Err(e) => bail!(APIError::ReqwestError(e)),
-	};
+	let body = response.text().await?;
 
 	if !status.is_success() {
-		bail!(APIError::HttpStatus { status: status.as_u16(), url: endpoint.to_string(), body: truncate(&body) });
+		return Err(APIError::HttpStatus { status: status.as_u16(), url: endpoint.to_string(), body: truncate(&body) });
 	}
 
 	Ok(body)

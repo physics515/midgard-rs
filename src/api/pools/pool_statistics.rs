@@ -1,5 +1,3 @@
-use anyhow::{bail, Result};
-
 use crate::{APIError, PoolStatistics, TimePeriod};
 
 /// # Errors
@@ -7,7 +5,7 @@ use crate::{APIError, PoolStatistics, TimePeriod};
 /// 2. JSON Parsing Error
 /// 3. Faild to Parse URL Parameters
 #[allow(clippy::module_name_repetitions)]
-pub async fn api_get_statistics_of_pool(base_url: &str, pool: &str, period: Option<TimePeriod>) -> Result<PoolStatistics> {
+pub async fn api_get_statistics_of_pool(base_url: &str, pool: &str, period: Option<TimePeriod>) -> Result<PoolStatistics, APIError> {
 	let period = period.unwrap_or_default();
 
 	let mut endpoint = base_url.to_string() + "pool/" + pool + "/stats";
@@ -18,10 +16,7 @@ pub async fn api_get_statistics_of_pool(base_url: &str, pool: &str, period: Opti
 
 	let response = crate::api::http::get_body(&endpoint).await?;
 
-	let res: PoolStatistics = match serde_json::from_str(&response) {
-		Ok(res) => res,
-		Err(e) => bail!(APIError::SerdeError(e)),
-	};
+	let res: PoolStatistics = serde_json::from_str(&response)?;
 
 	Ok(res)
 }

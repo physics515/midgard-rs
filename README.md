@@ -2,9 +2,38 @@
 Consumer information relating to swaps, pools, and volume. Midgard returns time-series information regarding the THORChain network, such as volume, pool information, users, liquidity providers and more. It also proxies to THORNode to reduce burden on the network. Runs on every node.
 
 ## midgard-rs
-This crate aims to provide fully typed client for the THORChain Midgard API.
-* By default it references the `https://gateway.liquify.com/chain/thorchain_midgard/v2/` base url — the public gateway [recommended by the THORChain developer documentation](https://dev.thorchain.org/concepts/connecting-to-thorchain.html) — but this can be changed by creating a new `Configuration` object and passing it to the `Midgard::with_config()` method.
-* The client is rate limited to 1 request per second by default but this can be changed by creating a new `Configuration` object and passing it to the `Midgard::with_config()` method.
+A typed Rust client for the THORChain Midgard v2 API. Every response is
+deserialized into a concrete struct rather than handed back as loose JSON, and
+every failure is an [`APIError`](#errors) you can match on.
+
+### Coverage
+
+**25 of the 39 data endpoints**, checked against Midgard OpenAPI spec 2.35.0 on
+2026-09-25. Implemented: actions, balance, borrower, borrowers, churns, health,
+the depths / earnings / liquidity_changes / savers / swaps / tvl histories,
+knownpools, member, members, network, nodes, pool, pool stats, pools, saver,
+stats, and the three thorname lookups.
+
+Not yet implemented — calling Midgard directly is the workaround until they land:
+`/v2/bonds/{address}`, `/v2/holders`, `/v2/votes`,
+`/v2/runepool/{address}`, `/v2/tcy/distribution/{address}`, the three
+`/v2/history/affiliate*` endpoints, `/v2/history/reserve`, `/v2/history/rune`,
+`/v2/history/runepool`, and the three `/v2/metrics/*` endpoints.
+
+### Where your requests go
+
+By default the client calls
+`https://gateway.liquify.com/chain/thorchain_midgard/v2/` — a **third-party
+public gateway**, the one [THORChain's developer documentation
+recommends](https://dev.thorchain.org/concepts/connecting-to-thorchain.html),
+rate limited to 50,000 requests per day per IP. Your queries reach Liquify's
+infrastructure, not a node you control. That default is a convenience, not an
+endorsement: point the client at your own Midgard instance, or any other public
+one, with a `Configuration`. The default is exported as
+`midgard_rs::DEFAULT_BASE_URL`.
+
+The client is rate limited to 1 request per second by default, which
+`Configuration` also controls.
 
 ## Basic Usage
 
@@ -44,8 +73,8 @@ The default is exported as `midgard_rs::DEFAULT_BASE_URL` if you want to build a
 
 ## Errors
 
-Every endpoint returns `anyhow::Result`, and the underlying error is an
-`APIError`:
+Every endpoint returns `Result<_, APIError>` — a concrete enum you can match
+on, rather than an erased error:
 
 | Variant | Means |
 | --- | --- |
@@ -53,9 +82,10 @@ Every endpoint returns `anyhow::Result`, and the underlying error is an
 | `ReqwestError` | The request could not be made, or its body could not be read. |
 | `SerdeError` | The response was not the JSON this crate expects. |
 | `InvalidParameter` | The arguments were rejected before any request was made — `get_balance` with both a timestamp and a height, or a `history/*` call with `count` outside `1..=400`. |
+| `QueryEncode` | A request's query string could not be encoded from the arguments given. |
 | `ClientBuild` | The HTTP client could not be constructed. |
 
-`APIError` is `#[non_exhaustive]`.
+`APIError` is `#[non_exhaustive]`, so new variants are added without a breaking change.
 
 ## TLS
 

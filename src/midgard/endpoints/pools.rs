@@ -1,6 +1,6 @@
-use anyhow::Result;
 use chrono::Utc;
 
+use crate::APIError;
 use crate::{api_get_details_of_pool, api_get_known_pool_list, api_get_pool_list, api_get_statistics_of_pool, KnownPoolList, Midgard, Pool, PoolList, PoolStatistics, PoolStatus, TimePeriod};
 
 impl Midgard {
@@ -23,13 +23,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_pool_list(&mut self, status: Option<PoolStatus>, period: Option<TimePeriod>) -> Result<PoolList> {
+	pub async fn get_pool_list(&mut self, status: Option<PoolStatus>, period: Option<TimePeriod>) -> Result<PoolList, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -42,15 +44,12 @@ impl Midgard {
 	/// ```rust
 	/// use midgard_rs::Midgard;
 	/// use midgard_rs::TimePeriod;
-	/// use rand::prelude::*;
 	/// # tokio_test::block_on(async {
 	/// let mut midgard = Midgard::new();
 	///
-	/// // Get a random pool
+	/// // Any pool asset; take the first the instance lists
 	/// let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-	/// let random_usize = thread_rng().gen_range(0..pool_list.get_pools().len());
-	/// let pool = pool_list.get_pools()[random_usize].clone();
-	/// let pool = pool.get_asset().to_string();
+	/// let pool = pool_list.get_pools()[0].get_asset().to_string();
 	///
 	/// // Get details of the pool
 	/// let details = midgard.get_details_of_pool(&pool, None).await.unwrap();
@@ -63,13 +62,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_details_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<Pool> {
+	pub async fn get_details_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<Pool, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -95,10 +96,12 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
-	pub async fn get_known_pool_list(&mut self) -> Result<KnownPoolList> {
+	/// this crate expects.
+	pub async fn get_known_pool_list(&mut self) -> Result<KnownPoolList, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -111,15 +114,12 @@ impl Midgard {
 	/// ```rust
 	/// use midgard_rs::Midgard;
 	/// use midgard_rs::TimePeriod;
-	/// use rand::prelude::*;
 	/// # tokio_test::block_on(async {
 	/// let mut midgard = Midgard::new();
 	///
-	/// // Get a random pool
+	/// // Any pool asset; take the first the instance lists
 	/// let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-	/// let random_usize = thread_rng().gen_range(0..pool_list.get_pools().len());
-	/// let pool = pool_list.get_pools()[random_usize].clone();
-	/// let pool = pool.get_asset().to_string();
+	/// let pool = pool_list.get_pools()[0].get_asset().to_string();
 	///
 	/// // Get statistics of the pool
 	/// let pool_statistics = midgard.get_statistics_of_pool(&pool, None).await.unwrap();
@@ -132,13 +132,15 @@ impl Midgard {
 	/// Returns [`crate::APIError::ReqwestError`] if the request to the Midgard
 	/// instance could not be made or its body could not be read.
 	///
+	/// Returns [`crate::APIError::HttpStatus`] if the instance answered with a
+	/// non-success status, carrying the code, the URL and a truncated body.
+	///
 	/// Returns [`crate::APIError::SerdeError`] if the response body is not the JSON
-	/// this crate expects — which, because the HTTP status is not yet
-	/// checked, is also what an error page from the instance looks like.
+	/// this crate expects.
 	///
 	/// Returns a `serde_urlencoded` error if the query parameters could not
 	/// be encoded.
-	pub async fn get_statistics_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<PoolStatistics> {
+	pub async fn get_statistics_of_pool(&mut self, pool: &str, period: Option<TimePeriod>) -> Result<PoolStatistics, APIError> {
 		// Wait for rate limit timer
 		self.sleep_until_ok_to_call().await;
 
@@ -153,6 +155,7 @@ mod tests {
 	use serde_json::json;
 
 	use super::*;
+	use crate::test_support::seeded_rng;
 
 	#[tokio::test]
 	async fn test_get_pool_list() {
@@ -210,10 +213,11 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_get_details_of_pool() {
+		let mut rng = seeded_rng();
 		let mut midgard = Midgard::new();
 
 		let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-		let random_usize = thread_rng().gen_range(0..pool_list.get_pools().len());
+		let random_usize = rng.gen_range(0..pool_list.get_pools().len());
 		let pool = pool_list.get_pools()[random_usize].clone();
 		let pool = pool.get_asset().to_string();
 		println!("pool: {}", &pool);
@@ -237,11 +241,12 @@ mod tests {
 
 	#[tokio::test]
 	async fn test_get_statistics_of_pool() {
+		let mut rng = seeded_rng();
 		let mut midgard = Midgard::new();
 
-		// Get a random pool
+		// A pool, chosen by the seeded generator
 		let pool_list = midgard.get_pool_list(None, None).await.unwrap();
-		let random_usize = thread_rng().gen_range(0..pool_list.get_pools().len());
+		let random_usize = rng.gen_range(0..pool_list.get_pools().len());
 		let pool = pool_list.get_pools()[random_usize].clone();
 		let pool = pool.get_asset().to_string();
 		println!("pool: {}", &pool);

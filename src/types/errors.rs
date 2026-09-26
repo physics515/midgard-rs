@@ -10,6 +10,15 @@ pub enum APIError {
 	#[error("Invalid Parameter: {0}")]
 	InvalidParameter(String),
 
+	/// A request's query string could not be encoded.
+	///
+	/// Reachable only through the parameters a caller supplies, so it is
+	/// reported rather than hidden: while the public API returned
+	/// `anyhow::Result` this case was erased into an opaque error with no
+	/// variant to match on.
+	#[error("Failed to encode query parameters: {0}")]
+	QueryEncode(#[from] serde_urlencoded::ser::Error),
+
 	/// The shared HTTP client could not be constructed.
 	///
 	/// Effectively unreachable in normal use — it means `reqwest` could not
